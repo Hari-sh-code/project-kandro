@@ -82,12 +82,11 @@ const NavBar = () => {
     <div className="h-screen border-r pl-2 pt-20">
       <ul className="flex flex-col gap-7">
         <li
-          onClick={() => handleNav(0)}
           className={`${
             nav === 0 ? "border-r-4 border-black pr-1" : "border-none pr-2"
           }`}
         >
-          <Link to="/">
+          <Link to="/" onClick={() => handleNav(0)}>
             <div className="flex flex-col justify-center gap-1 items-center font-semibold">
               <HomeIcon />
               <div>Home</div>
@@ -95,12 +94,11 @@ const NavBar = () => {
           </Link>
         </li>
         <li
-          onClick={() => handleNav(1)}
           className={`${
             nav === 1 ? "border-r-4 border-black pr-1" : "border-none pr-2"
           }`}
         >
-          <Link to="/datasets">
+          <Link to="/datasets" onClick={() => handleNav(1)}>
             <div className="flex flex-col justify-center gap-1 items-center font-semibold">
               <ServicesIcon />
               <div>Datasets</div>
@@ -108,12 +106,11 @@ const NavBar = () => {
           </Link>
         </li>
         <li
-          onClick={() => handleNav(2)}
           className={`${
             nav === 2 ? "border-r-4 border-black pr-1" : "border-none pr-2"
           }`}
         >
-          <Link to="/models">
+          <Link to="/models" onClick={() => handleNav(2)}>
             <div className="flex flex-col justify-center gap-1 items-center font-semibold">
               <AboutIcon />
               Models
@@ -121,12 +118,11 @@ const NavBar = () => {
           </Link>
         </li>
         <li
-          onClick={() => handleNav(3)}
           className={`${
             nav === 3 ? "border-r-4 border-black pr-1" : "border-none pr-2"
           }`}
         >
-          <Link to="/discussion">
+          <Link to="/discussion" onClick={() => handleNav(3)}>
             <div className="flex flex-col justify-center gap-1 items-center font-semibold">
               <ContactIcon />
               Discussion

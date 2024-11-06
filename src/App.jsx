@@ -1,9 +1,12 @@
 import { Route, Routes } from "react-router-dom";
-import Home from "./Home";
+import Home from "./Home/Home";
 import Header from "./Header";
 import { BrowserRouter } from "react-router-dom";
-import Datasets from "./Datasets";
-import NavBar from "./NavBar";
+import Datasets from "./Datasets/Datasets";
+import NavBar from "./NavBar/";
+import Models from "./Models/Models";
+import Discussion from "./Discussion/Discussion";
+import { DataProvider } from "./context/DataContext";
 
 function App() {
   return (
@@ -11,10 +14,15 @@ function App() {
       <Header />
       <div className="flex flex-row">
         <NavBar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/datasets" element={<Datasets />} />
-        </Routes>
+
+        <DataProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/datasets" element={<Datasets />} />
+            <Route path="/models" element={<Models />} />
+            <Route path="/discussion" element={<Discussion />} />
+          </Routes>
+        </DataProvider>
       </div>
     </BrowserRouter>
   );

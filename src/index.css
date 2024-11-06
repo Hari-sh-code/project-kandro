@@ -14,3 +14,8 @@ h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
+@layer components {
+  .filter {
+    @apply flex items-center justify-center hover:text-white px-3 py-1 rounded-2xl hover:cursor-pointer border hover:bg-gray-500;
+  }
+}
