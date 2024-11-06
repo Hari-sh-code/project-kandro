@@ -69,14 +69,22 @@ const ContactIcon = () => (
 );
 
 const NavBar = () => {
-  const [nav, setNav] = useState(0);
+  const [nav, setNav] = useState(() => {
+    const localNav = localStorage.getItem("localNav");
+    return localNav ? JSON.parse(localNav) : 0;
+  });
+  const handleNav = (val) => {
+    setNav(val);
+    localStorage.setItem("localNav", JSON.stringify(val));
+  };
+
   return (
     <div className="h-screen border-r pl-2 pt-20">
       <ul className="flex flex-col gap-7">
         <li
-          onClick={() => setNav(0)}
+          onClick={() => handleNav(0)}
           className={`${
-            nav === 0 ? "border-r-2 border-black pr-2" : "border-none pr-2"
+            nav === 0 ? "border-r-4 border-black pr-1" : "border-none pr-2"
           }`}
         >
           <Link to="/">
@@ -87,9 +95,9 @@ const NavBar = () => {
           </Link>
         </li>
         <li
-          onClick={() => setNav(1)}
+          onClick={() => handleNav(1)}
           className={`${
-            nav === 1 ? "border-r-2 border-black pr-2" : "border-none pr-2"
+            nav === 1 ? "border-r-4 border-black pr-1" : "border-none pr-2"
           }`}
         >
           <Link to="/datasets">
@@ -100,12 +108,12 @@ const NavBar = () => {
           </Link>
         </li>
         <li
-          onClick={() => setNav(2)}
+          onClick={() => handleNav(2)}
           className={`${
-            nav === 2 ? "border-r-2 border-black pr-2" : "border-none pr-2"
+            nav === 2 ? "border-r-4 border-black pr-1" : "border-none pr-2"
           }`}
         >
-          <Link to="/datasets">
+          <Link to="/models">
             <div className="flex flex-col justify-center gap-1 items-center font-semibold">
               <AboutIcon />
               Models
@@ -113,12 +121,12 @@ const NavBar = () => {
           </Link>
         </li>
         <li
-          onClick={() => setNav(3)}
+          onClick={() => handleNav(3)}
           className={`${
-            nav === 3 ? "border-r-2 border-black pr-2" : "border-none pr-2"
+            nav === 3 ? "border-r-4 border-black pr-1" : "border-none pr-2"
           }`}
         >
-          <Link to="/datasets">
+          <Link to="/discussion">
             <div className="flex flex-col justify-center gap-1 items-center font-semibold">
               <ContactIcon />
               Discussion
