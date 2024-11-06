@@ -4,8 +4,8 @@ const Home = () => {
   return (
     <div>
       <svg
-        width="1469"
-        height="830"
+        width="1269"
+        height="630"
         viewBox="0 0 1469 830"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -24,9 +24,9 @@ const Home = () => {
             width="1469"
             height="830"
             filterUnits="userSpaceOnUse"
-            color-interpolation-filters="sRGB"
+            colorInterpolationFilters="sRGB"
           >
-            <feFlood flood-opacity="0" result="BackgroundImageFix" />
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
             <feColorMatrix
               in="SourceAlpha"
               type="matrix"
@@ -60,8 +60,8 @@ const Home = () => {
             y2="1106.86"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#72EDF2" />
-            <stop offset="1" stop-color="#5151E5" />
+            <stop stopColor="#72EDF2" />
+            <stop offset="1" stopColor="#5151E5" />
           </linearGradient>
         </defs>
       </svg>

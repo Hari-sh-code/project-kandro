@@ -1,5 +1,4 @@
-import React from "react";
-import { VscAccount } from "react-icons/vsc";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const HomeIcon = () => (
@@ -55,7 +54,7 @@ const ContactIcon = () => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <g clip-path="url(#clip0_3_449)">
+    <g clipPath="url(#clip0_3_449)">
       <path
         d="M0.5 5.5C0.5 3.566 2.068 2 4 2H29C30.934 2 32.5 3.566 32.5 5.5V24.5C32.5 25.4283 32.1313 26.3185 31.4749 26.9749C30.8185 27.6313 29.9283 28 29 28H16.622L11.474 33.146C11.0665 33.5533 10.5473 33.8307 9.98221 33.943C9.41709 34.0554 8.83134 33.9977 8.299 33.7772C7.76666 33.5568 7.31163 33.1834 6.99142 32.7044C6.67121 32.2254 6.5002 31.6622 6.5 31.086V28H4C3.07174 28 2.1815 27.6313 1.52513 26.9749C0.868749 26.3185 0.5 25.4283 0.5 24.5L0.5 5.5ZM4 5C3.86739 5 3.74021 5.05268 3.64645 5.14645C3.55268 5.24021 3.5 5.36739 3.5 5.5V24.5C3.5 24.776 3.724 25 4 25H8C8.39782 25 8.77936 25.158 9.06066 25.4393C9.34196 25.7206 9.5 26.1022 9.5 26.5V30.878L14.94 25.44C15.221 25.1586 15.6023 25.0004 16 25H29C29.1326 25 29.2598 24.9473 29.3536 24.8536C29.4473 24.7598 29.5 24.6326 29.5 24.5V5.5C29.5 5.36739 29.4473 5.24021 29.3536 5.14645C29.2598 5.05268 29.1326 5 29 5H4ZM45 17H38C37.6022 17 37.2206 16.842 36.9393 16.5607C36.658 16.2794 36.5 15.8978 36.5 15.5C36.5 15.1022 36.658 14.7206 36.9393 14.4393C37.2206 14.158 37.6022 14 38 14H45C46.932 14 48.5 15.568 48.5 17.5V36.5C48.5 37.4283 48.1312 38.3185 47.4749 38.9749C46.8185 39.6312 45.9283 40 45 40H42.5V43.086C42.4998 43.6622 42.3288 44.2254 42.0086 44.7044C41.6884 45.1834 41.2333 45.5568 40.701 45.7772C40.1687 45.9977 39.5829 46.0554 39.0178 45.943C38.4527 45.8307 37.9335 45.5533 37.526 45.146L32.378 40H22C21.0717 40 20.1815 39.6312 19.5251 38.9749C18.8687 38.3185 18.5 37.4283 18.5 36.5V33.57C18.5 33.1722 18.658 32.7906 18.9393 32.5093C19.2206 32.228 19.6022 32.07 20 32.07C20.3978 32.07 20.7794 32.228 21.0607 32.5093C21.342 32.7906 21.5 33.1722 21.5 33.57V36.5C21.5 36.776 21.724 37 22 37H33C33.398 37 33.78 37.158 34.06 37.44L39.5 42.878V38.5C39.5 38.1022 39.658 37.7206 39.9393 37.4393C40.2206 37.158 40.6022 37 41 37H45C45.1326 37 45.2598 36.9473 45.3536 36.8536C45.4473 36.7598 45.5 36.6326 45.5 36.5V17.5C45.5 17.3674 45.4473 17.2402 45.3536 17.1464C45.2598 17.0527 45.1326 17 45 17ZM25.56 10.56L15.56 20.56C15.4211 20.6998 15.256 20.8108 15.0741 20.8865C14.8922 20.9622 14.697 21.0012 14.5 21.0012C14.303 21.0012 14.1078 20.9622 13.9259 20.8865C13.744 20.8108 13.5789 20.6998 13.44 20.56L8.44 15.56C8.3008 15.4208 8.19038 15.2555 8.11504 15.0737C8.03971 14.8918 8.00093 14.6969 8.00093 14.5C8.00093 14.3031 8.03971 14.1082 8.11504 13.9263C8.19038 13.7445 8.3008 13.5792 8.44 13.44C8.5792 13.3008 8.74446 13.1904 8.92633 13.115C9.10821 13.0397 9.30314 13.0009 9.5 13.0009C9.69686 13.0009 9.89179 13.0397 10.0737 13.115C10.2555 13.1904 10.4208 13.3008 10.56 13.44L14.5 17.378L23.44 8.44C23.5792 8.3008 23.7445 8.19038 23.9263 8.11504C24.1082 8.03971 24.3031 8.00093 24.5 8.00093C24.6969 8.00093 24.8918 8.03971 25.0737 8.11504C25.2555 8.19038 25.4208 8.3008 25.56 8.44C25.6992 8.5792 25.8096 8.74446 25.885 8.92633C25.9603 9.10821 25.9991 9.30314 25.9991 9.5C25.9991 9.69686 25.9603 9.89179 25.885 10.0737C25.8096 10.2555 25.6992 10.4208 25.56 10.56Z"
         fill="#1E1E1E"
@@ -70,39 +69,63 @@ const ContactIcon = () => (
 );
 
 const NavBar = () => {
+  const [nav, setNav] = useState(0);
   return (
-    <div className="p-2">
-      <div className="flex items-center justify-between border-b">
-        <h1 className="font-bold">Kandro</h1>
-        <div className="flex space-x-4 items-center">
-          <ul className="flex space-x-4">
-            <Link to={"/"}>
-              <li className="flex flex-col justify-center items-center font-semibold">
-                <HomeIcon />
-                Home
-              </li>
-            </Link>
-            <Link to={"/datasets"}>
-              <li className="flex flex-col justify-center items-center font-semibold">
-                <ServicesIcon />
-                Datasets
-              </li>
-            </Link>
-            <Link to={"/models"}>
-              <li className="flex flex-col justify-center items-center font-semibold">
-                <AboutIcon />
-                Models
-              </li>
-            </Link>
-            <Link to={"/discussion"}>
-              <li className="flex flex-col justify-center items-center font-semibold">
-                <ContactIcon />
-                Discussion
-              </li>
-            </Link>
-          </ul>
-        </div>
-      </div>
+    <div className="h-screen border-r pl-2 pt-20">
+      <ul className="flex flex-col gap-7">
+        <li
+          onClick={() => setNav(0)}
+          className={`${
+            nav === 0 ? "border-r-2 border-black pr-2" : "border-none pr-2"
+          }`}
+        >
+          <Link to="/">
+            <div className="flex flex-col justify-center gap-1 items-center font-semibold">
+              <HomeIcon />
+              <div>Home</div>
+            </div>
+          </Link>
+        </li>
+        <li
+          onClick={() => setNav(1)}
+          className={`${
+            nav === 1 ? "border-r-2 border-black pr-2" : "border-none pr-2"
+          }`}
+        >
+          <Link to="/datasets">
+            <div className="flex flex-col justify-center gap-1 items-center font-semibold">
+              <ServicesIcon />
+              <div>Datasets</div>
+            </div>
+          </Link>
+        </li>
+        <li
+          onClick={() => setNav(2)}
+          className={`${
+            nav === 2 ? "border-r-2 border-black pr-2" : "border-none pr-2"
+          }`}
+        >
+          <Link to="/datasets">
+            <div className="flex flex-col justify-center gap-1 items-center font-semibold">
+              <AboutIcon />
+              Models
+            </div>
+          </Link>
+        </li>
+        <li
+          onClick={() => setNav(3)}
+          className={`${
+            nav === 3 ? "border-r-2 border-black pr-2" : "border-none pr-2"
+          }`}
+        >
+          <Link to="/datasets">
+            <div className="flex flex-col justify-center gap-1 items-center font-semibold">
+              <ContactIcon />
+              Discussion
+            </div>
+          </Link>
+        </li>
+      </ul>
     </div>
   );
 };
