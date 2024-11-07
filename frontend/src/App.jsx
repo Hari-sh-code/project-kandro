@@ -7,7 +7,7 @@ import NavBar from "./NavBar/";
 import Models from "./Models/Models";
 import Discussion from "./Discussion/Discussion";
 
-import { DataProvider } from "./context/DataContext";
+import { DataProvider } from "./Context/DataContext";
 import { UploadData } from "./Datasets/UploadData";
 
 import ViewDataset from "./Datasets/ViewDataset";

@@ -146,7 +146,7 @@ export function UploadData() {
 
     return (
         <div className="flex justify-center items-center w-full min-h-screen">
-            <div className="flex flex-col items-center p-10 shadow-lg rounded-lg w-full max-w-xl">
+            <div className="flex flex-col items-center p-10 rounded-lg w-full max-w-xl">
                 <h2 className="text-4xl font-semibold mb-8">Upload Dataset</h2>
 
                 <div className="w-full space-y-6">

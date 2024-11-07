@@ -11,9 +11,7 @@ const DataGrid = () => {
   const isNewDataset = (time) => {
     const datasetTime = new Date(time);
     const now = new Date();
-
     const timeDiff = (now - datasetTime) / (1000 * 60 * 60);
-
     return timeDiff < 48;
   };
 
@@ -24,7 +22,7 @@ const DataGrid = () => {
           datasets.map((data) => (
             <Link
               to={`/datasets/${data.id}`}
-              className="relative rounded-lg"
+              className="relative rounded-lg transform transition duration-300 hover:scale-105 hover:shadow-lg"
               key={data.id}
             >
               <img
@@ -66,7 +64,9 @@ const DataGrid = () => {
             </Link>
           ))
         ) : (
-          <p className="text-gray-500">No items available</p>
+          <div className="col-span-3 text-center text-gray-500 text-2xl">
+            No datasets available
+          </div>
         )}
       </div>
     </div>
