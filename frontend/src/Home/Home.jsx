@@ -8,12 +8,13 @@ const Home = () => {
   useEffect(() => {
     let index = 0;
     const typingInterval = setInterval(() => {
-      setText((prev) => prev + fullText[index]);
+      setText(fullText.slice(0, index + 1));
       index++;
       if (index === fullText.length) {
         clearInterval(typingInterval);
       }
     }, 50);
+
     return () => clearInterval(typingInterval);
   }, []);
 
@@ -21,7 +22,6 @@ const Home = () => {
     <div className="w-full px-6 bg-gray-50">
       <div className="flex justify-center w-full">
         <div className="bg-white text-black rounded-lg w-full max-w-5xl p-8 mb-12 mt-12 slide-in-bottom">
-          {/* Header Section */}
           <div className="flex items-center justify-between mb-10 slide-in-left gap-9">
             <div className="flex-1">
               <h1 className="text-4xl font-bold mb-4">
@@ -29,24 +29,28 @@ const Home = () => {
               </h1>
               <p className="text-lg mb-6 h-12 leading-relaxed">
                 {text}
-                <span className="border-r-2 border-black animate-pulse"></span>
+                {text.length < fullText.length && (
+                  <span className="border-r-2 border-black animate-pulse"></span>
+                )}
               </p>
             </div>
 
             <img
-              src="/public/kandro.png"
+              src="/dataset.png"
               alt="Kandro Logo"
-              className="object-contain ml-4"
+              className="object-contain ml-4 h-96 w-96"
             />
           </div>
 
-          {/* Who's on Kandro Section */}
           <div className="bg-gray-100 rounded-lg p-8 slide-in-bottom">
             <h2 className="text-2xl font-semibold mb-8 text-center">
               Who's on Kandro?
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <div className="p-6 bg-white  hover:bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+
+             
+
                 <h3 className="text-xl font-medium mb-3">Learners</h3>
                 <p className="text-base">
                   Access courses, competitions, and forums to deepen your

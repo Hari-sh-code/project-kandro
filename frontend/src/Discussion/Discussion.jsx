@@ -159,7 +159,7 @@ const Discussion = () => {
             placeholder="Enter the topic name"
             className="w-full p-3 border border-gray-300 rounded-lg mb-4"
           />
-          <div className="flex justify-between">
+          <div className="flex just">
             <button
               onClick={() => setShowCreatePopup(false)}
               className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition"
