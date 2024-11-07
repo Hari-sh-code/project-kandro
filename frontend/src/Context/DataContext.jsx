@@ -3,10 +3,7 @@ import { createContext, useState, useEffect } from "react";
 const DataContext = createContext({});
 
 export const DataProvider = ({ children }) => {
-  const [filter, setFilter] = useState(() => {
-    const localFil = localStorage.getItem("localFil");
-    return localFil ? JSON.parse(localFil) : 0; // Default to "All"
-  });
+  const [filter, setFilter] = useState(0);
 
   const [datasets, setDatasets] = useState([
     {
@@ -141,13 +138,40 @@ export const DataProvider = ({ children }) => {
     },
   ]);
 
+  const [filteredDatasets, setFilteredDatasets] = useState(datasets);
+
+  useEffect(() => {
+    const applyFilter = () => {
+      let result;
+
+      if (filter === 1) {
+        const twoDaysAgo = new Date();
+        twoDaysAgo.setHours(twoDaysAgo.getHours() - 48);
+        result = datasets.filter(
+          (dataset) => new Date(dataset.time) >= twoDaysAgo
+        );
+      } else if (filter === 2) {
+        result = [...datasets].sort((a, b) => b.quality - a.quality);
+      } else if (filter === 3) {
+        result = [...datasets].sort((a, b) => b.rating - a.rating);
+      } else {
+        result = datasets;
+      }
+
+      setFilteredDatasets(result);
+    };
+
+    applyFilter();
+  }, [datasets, filter]);
+
   const handleFilter = (val) => {
     setFilter(val);
-    localStorage.setItem("localFil", JSON.stringify(val));
   };
 
   return (
-    <DataContext.Provider value={{ filter, handleFilter, datasets }}>
+    <DataContext.Provider
+      value={{ filter, handleFilter, datasets: filteredDatasets }}
+    >
       {children}
     </DataContext.Provider>
   );
