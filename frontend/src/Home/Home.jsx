@@ -46,34 +46,34 @@ const Home = () => {
               Who's on Kandro?
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              <div className="p-6 bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+              <div className="p-6 bg-white  hover:bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
                 <h3 className="text-xl font-medium mb-3">Learners</h3>
                 <p className="text-base">
                   Access courses, competitions, and forums to deepen your
                   knowledge.
                 </p>
               </div>
-              <div className="p-6 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+              <div className="p-6 bg-white hover:bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
                 <h3 className="text-xl font-medium mb-3">Developers</h3>
                 <p className="text-base">
                   Explore models, notebooks, and datasets for your projects.
                 </p>
               </div>
-              <div className="p-6 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+              <div className="p-6 bg-white hover:bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
                 <h3 className="text-xl font-medium mb-3">Researchers</h3>
                 <p className="text-base">
                   Utilize pre-trained models and datasets to advance ML
                   research.
                 </p>
               </div>
-              <div className="p-6 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+              <div className="p-6 bg-white hover:bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
                 <h3 className="text-xl font-medium mb-3">Data Providers</h3>
                 <p className="text-base">
                   Securely share datasets and earn by contributing to
                   innovations.
                 </p>
               </div>
-              <div className="p-6 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+              <div className="p-6 bg-white hover:bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
                 <h3 className="text-xl font-medium mb-3">Enterprises</h3>
                 <p className="text-base">
                   Get tailored solutions for data needs and collaborate within

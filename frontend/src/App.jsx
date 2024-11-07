@@ -8,6 +8,7 @@ import NavBar from "./NavBar/";
 import Models from "./Models/Models";
 import Discussion from "./Discussion/Discussion";
 import { DataProvider } from "./context/DataContext";
+import { UploadData } from "./Datasets/UploadData";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route path="/datasets/:id" element={<ViewDataset />} />
             <Route path="/models" element={<Models />} />
             <Route path="/discussion" element={<Discussion />} />
+            <Route path="/upload file" element={<UploadData/>}/>
           </Routes>
         </DataProvider>
       </div>

@@ -3,6 +3,7 @@ import { CgSearch } from "react-icons/cg";
 import { MdAdd } from "react-icons/md";
 import Filter from "./Filter";
 import DataGrid from "./DataGrid";
+import { Link } from "react-router-dom";
 const Datasets = () => {
   return (
     <>
@@ -25,10 +26,11 @@ const Datasets = () => {
               />
             </form>
           </div>
-          <button className="flex items-center justify-center rounded-full bg-black text-white border-black border-2 pr-3">
+          <Link className="flex items-center justify-center rounded-full bg-black text-white border-black border-2 pr-3" to={"/upload file"}>
             <MdAdd className="h-8 w-8" />
             <div className="text-2xl flex items-center pb-1">Dataset</div>
-          </button>
+
+          </Link>
         </div>
         <div className="px-5">
           <Filter />
