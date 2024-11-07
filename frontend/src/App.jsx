@@ -3,6 +3,7 @@ import Home from "./Home/Home";
 import Header from "./Header";
 import { BrowserRouter } from "react-router-dom";
 import Datasets from "./Datasets/Datasets";
+import ViewDataset from "./Datasets/ViewDataset";
 import NavBar from "./NavBar/";
 import Models from "./Models/Models";
 import Discussion from "./Discussion/Discussion";
@@ -19,6 +20,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/datasets" element={<Datasets />} />
+            <Route path="/datasets/:id" element={<ViewDataset />} />
             <Route path="/models" element={<Models />} />
             <Route path="/discussion" element={<Discussion />} />
           </Routes>

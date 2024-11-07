@@ -1,24 +1,24 @@
+import React from "react";
 import { CgSearch } from "react-icons/cg";
 import { MdAdd } from "react-icons/md";
 import Filter from "./Filter";
 import DataGrid from "./DataGrid";
-
 const Datasets = () => {
   return (
     <>
-      <div className="flex flex-col basis-full overflow-auto h-screen">
+      <div className="flex flex-col basis-full overflow-auto h-screen bg-gray-50">
         <div className="text-4xl p-5 font-medium">Datasets</div>
         <div className="flex flex-row justify-between items-center px-5">
           <div>
             <form
               action=""
-              className="gap-2 border rounded-lg flex items-center justify-center"
+              className="gap-2 border rounded-full flex items-center justify-center p-2"
             >
               <label htmlFor="datasetInp">
                 <CgSearch className="h-6 w-6 pl-1 text-gray-600" />
               </label>
               <input
-                className="outline-none text-lg text-gray-600 rounded-lg"
+                className="outline-none text-lg text-gray-600 rounded-r-full bg-transparent"
                 type="text"
                 id="datasetInp"
                 placeholder="Search Datasets"
