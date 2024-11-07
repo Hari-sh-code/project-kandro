@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { BsFillSendFill } from "react-icons/bs";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
 import { MdAutoDelete } from "react-icons/md";
-import Popup from "../PopupComponents/popup"; // Import the Popup component
+import Popup from "../PopupComponents/popup";
+import { MdReportProblem } from "react-icons/md";// Import the Popup component
 
 const Discussion = () => {
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [showDeletePopup, setShowDeletePopup] = useState(false); // State for end discussion popup
-  const [showCreatePopup, setShowCreatePopup] = useState(false); // State for create discussion popup
+  const [showCreatePopup, setShowCreatePopup] = useState(false);
+  const [showReportpopup,setshowreportpopup] =useState(false) // State for create discussion popup
   const [newTopicName, setNewTopicName] = useState(""); // State for new topic name input
   const inputRef = useRef(null);
   const userId = "currentUser"; // Replace this with actual user ID or username
@@ -36,6 +38,9 @@ const Discussion = () => {
   const handleCreateDiscussion = () => {
     setShowCreatePopup(true); // Show popup for creating a new discussion
   };
+  const handlereport =()=>{
+    setshowreportpopup(true)
+  }
 
   const handleCreateNewTopic = () => {
     if (newTopicName.trim()) {
@@ -96,6 +101,18 @@ const Discussion = () => {
             </div>
 
             {selectedTopic.createdBy === userId && (
+              <div className="flex gap-6 items-center">
+              {/* Report Button with Tooltip */}
+              <div className="relative group">
+                <button className="text-3xl text-red-950" onClick={handlereport}>
+                  <MdReportProblem />
+                </button>
+                <span className="absolute -top-14 left-1/2 transform -translate-x-1/2 text-sm text-white bg-gray-800 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  Report Issue
+                </span>
+              </div>
+            
+              {/* End Discussion Button */}
               <button
                 onClick={handleEndDiscussion}
                 className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition flex items-center"
@@ -103,6 +120,8 @@ const Discussion = () => {
                 <MdAutoDelete className="mr-2 text-xl" />
                 End Discussion
               </button>
+            </div>
+
             )}
           </div>
 
@@ -147,6 +166,31 @@ const Discussion = () => {
           </button>
         </div>
       </Popup>
+      <Popup trigger={showReportpopup} onClose={() => setshowreportpopup(false)}>
+          <div className="p-4 text-center">
+            <h1 className="text-lg font-semibold mb-4">
+              Report Chat Activity
+            </h1>
+            <p className="text-sm text-gray-700 mb-6">
+              By clicking "Report," you are flagging any illegal or inappropriate activities within the chat.
+            </p>
+            <div className="flex justify-between mx-[190px]">
+            <button
+              onClick={() => setshowreportpopup(false)}
+              className="px-4 py-2 bg-slate-800 text-white font-medium rounded-md hover:bg-slate-600 transition"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => setshowreportpopup(false)}
+              className="px-4 py-2 bg-red-500 text-white font-medium rounded-md hover:bg-red-600 transition"
+            >
+              Report
+            </button>
+            </div>
+            
+          </div>
+        </Popup>
 
       {/* Create Discussion Popup */}
       <Popup trigger={showCreatePopup} onClose={() => setShowCreatePopup(false)}>

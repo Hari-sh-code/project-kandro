@@ -4,11 +4,13 @@ const cors = require('cors');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');  // Import child_process to run Python scripts
 const app = express();
 const PORT = 9000;
 
+// Enable CORS for all routes
 app.use(cors());
+
+// Configure multer to save uploaded files to a temporary directory
 const upload = multer({ dest: 'uploads/' });
 
 // Endpoint to receive the file and respond with quality
@@ -18,38 +20,13 @@ app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        console.log(`File received for quality check: ${req.file.originalname}`);
+        console.log(`File received: ${req.file.originalname}`);
 
-        // Get the file path
-        const filePath = path.join(__dirname, 'uploads', req.file.filename);
+        // Perform any necessary processing on the file here (e.g., validation, parsing)
+        // For now, we're just responding with a fixed quality value as requested
 
-        // Spawn Python process to calculate quality
-        const pythonProcess = spawn('python3', ['calculate_quality.py', filePath]);
-
-        // Capture output from the Python script
-        let result = '';
-        pythonProcess.stdout.on('data', (data) => {
-            result += data.toString();
-        });
-
-        // Handle script completion
-        pythonProcess.on('close', (code) => {
-            if (code === 0) {
-                const response = JSON.parse(result);  // Parse the JSON result
-                res.json(response);
-
-                // Optionally delete the uploaded file after processing
-                fs.unlinkSync(filePath);
-            } else {
-                res.status(500).json({ error: 'Error calculating data quality' });
-            }
-        });
-
-        // Handle errors in the Python script
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`Python error: ${data}`);
-            res.status(500).json({ error: 'Error in Python script' });
-        });
+        const qualityScore = 80; // Mocked quality score
+        res.json({ quality: qualityScore });
     } catch (error) {
         console.error('Error processing file:', error);
         res.status(500).json({ error: 'Error processing file' });
@@ -72,7 +49,7 @@ app.post('/api/get-hash-code', upload.single('file'), (req, res) => {
         const fileStream = fs.createReadStream(filePath);
 
         // Create a hash object using SHA256
-        const hash = crypto.createHash('sha256');
+        const hash = crypto.createHash('sha256'); // You can use 'md5', 'sha512', etc.
 
         // Update the hash with file data
         fileStream.on('data', (chunk) => {
@@ -96,6 +73,7 @@ app.post('/api/get-hash-code', upload.single('file'), (req, res) => {
             res.status(500).json({ error: 'Error reading the file' });
             console.error('File stream error:', err);
         });
+
     } catch (error) {
         console.error('Error generating hash:', error);
         res.status(500).json({ error: 'Error generating hash' });

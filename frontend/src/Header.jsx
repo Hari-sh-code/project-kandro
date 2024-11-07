@@ -4,7 +4,7 @@ import Web3 from "web3";
 import { IoMdCloseCircle } from "react-icons/io";
 import { MdContentCopy } from "react-icons/md";
 
-const NavBar = () => {
+const Header = () => {
 
     const [isOpen, setIsOpen] = useState(false);
     const [account, setAccount] = useState("");
@@ -150,7 +150,7 @@ const NavBar = () => {
           <span className="">andro</span>
         </h1>
 
-        <VscAccount className="h-10 w-10"onClick={toggleSlide} />
+        <VscAccount className="h-10 w-10 cursor-pointer" onClick={toggleSlide} />
       </div>
       {isOpen && (
         <div
@@ -184,10 +184,10 @@ const NavBar = () => {
                 <p className="break-words text-sm text-gray-700">{account}</p>
                 <button
                   onClick={handleCopy}
-                  className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
+                  className="text-gray-600 hover:text-gray-800 flex items-center gap-1 "
                   aria-label="Copy address"
                 >
-                  <MdContentCopy /> <span>{copyStatus}</span>
+                  <MdContentCopy  /> <span>{copyStatus}</span>
                 </button>
               </div>
             </div>
@@ -207,4 +207,4 @@ const NavBar = () => {
   );
 };
 
-export default NavBar;
+export default Header;
