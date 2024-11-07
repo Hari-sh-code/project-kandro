@@ -21,11 +21,12 @@ export function UploadData() {
         setFile(e.target.files[0]);
         setFileUploaded(true);
     };
+
     const handleQualityCheck = async () => {
         if (file) {
             const formData = new FormData();
             formData.append("file", file);
-    
+
             try {
                 const response = await axios.post("http://localhost:9000/api/data-quality-check", formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
@@ -41,8 +42,6 @@ export function UploadData() {
             }
         }
     };
-    
-
 
     const handleThumbnailChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -63,10 +62,10 @@ export function UploadData() {
             console.error("Data quality is not set. Please check data quality before uploading.");
             return;  // Exit if dataQuality is not set
         }
-    
+
         const currentDate = new Date().toISOString();
         let userAddress = "";
-    
+
         if (window.ethereum) {
             const web3 = new Web3(window.ethereum);
             const accounts = await web3.eth.getAccounts();
@@ -76,7 +75,7 @@ export function UploadData() {
                 console.error("MetaMask address not found.");
             }
         }
-    
+
         // Log each form field to verify data before uploading
         console.log("File:", file);
         console.log("Thumbnail:", thumbnail);
@@ -87,19 +86,18 @@ export function UploadData() {
         console.log("Dataset Type:", datasetType);
         console.log("Data Quality:", dataQuality); // Ensure dataQuality is set
         console.log("ETH Price:", ethPrice);
-    
+
         const formData = new FormData();
         formData.append("file", file);
         formData.append("thumbnail", thumbnail);
         formData.append("description", description);
         formData.append("username", "devak");
-        formData.append("hashcode",hashCode);
         formData.append("userAddress", userAddress);
         formData.append("currentDate", currentDate);
         formData.append("datasetType", datasetType);
         formData.append("dataQuality", dataQuality); // Include dataQuality here
         formData.append("ethPrice", ethPrice);
-    
+
         try {
             const response = await axios.post("http://localhost:9000/api/upload-dataset", formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -109,8 +107,6 @@ export function UploadData() {
             console.error("Error uploading data:", error);
         }
     };
-    
-
 
     const handleNext = async () => {
         try {
@@ -127,12 +123,25 @@ export function UploadData() {
                     formData.append("currentDate", currentDate);
                     formData.append("datasetType", datasetType);
 
-
-                    const response = await axios.post("http://localhost:9000/api/get-hash-code", formData, {
+                    // Call your backend to get the hash code and upload to Pinata
+                    const hashResponse = await axios.post("http://localhost:9000/api/get-hash-code", formData, {
                         headers: { 'Content-Type': 'multipart/form-data' },
                     });
-                    console.log(response.data);
+                    console.log("Hash response:", hashResponse.data);
+
+                    // After getting the hash code, upload the file to Pinata
+                    const pinataFormData = new FormData();
+                    pinataFormData.append("file", file);
+                    pinataFormData.append("hashCode", hashResponse.data.hashCode);
                     
+                    // Upload to Pinata API
+                    const pinataResponse = await axios.post("http://localhost:9000/api/upload-to-pinata", pinataFormData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    });
+
+                    console.log("File uploaded to Pinata:", pinataResponse.data);
                     setQualityChecked(true);
                     setNextStep(true);
                 }
@@ -218,27 +227,29 @@ export function UploadData() {
                                     type="file"
                                     accept="image/jpg"
                                     onChange={handleThumbnailChange}
-                                    className={`w-full p-3 border ${isThumbnailTooLarge ? 'border-red-500' : thumbnailUploaded ? 'border-green-500' : 'border-gray-600'} rounded-lg focus:outline-none focus:border-gray-500 transition`}
+                                    className={`w-full p-3 border ${thumbnailUploaded ? 'border-green-500' : 'border-gray-600'} rounded-lg focus:outline-none focus:border-gray-500 transition`}
                                 />
                             </div>
 
-                            {/* ETH Price Input */}
+                            {/* ETH Price */}
                             <div>
-                                <label className="flex items-center font-medium mb-2"><FaEthereum/> <div>Gwei ETH Price</div></label>
+                                <label className="block font-medium mb-2">ETH Price</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     value={ethPrice}
                                     onChange={(e) => setEthPrice(e.target.value)}
-                                    placeholder="Enter Gwei ETH price"
+                                    placeholder="Enter ETH price"
                                     className="w-full p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-gray-500 transition"
                                 />
                             </div>
 
+                            {/* Submit Button */}
                             <button
                                 onClick={handleSubmit}
-                                className="w-full py-3 mt-6 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg shadow-md transition"
+                                disabled={!file || !description || !dataQuality || !ethPrice}
+                                className="mt-5 px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg disabled:bg-gray-500 transition"
                             >
-                                Upload
+                                Upload Dataset
                             </button>
                         </>
                     )}
