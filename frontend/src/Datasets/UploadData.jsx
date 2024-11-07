@@ -34,7 +34,7 @@ export function UploadData() {
                 console.log("Response data:", response.data); // Log to inspect structure
                 console.log("Quality field:", response.data.quality);  // Confirm correct field name
                 const qualityData = response.data;
-                setDataQuality(qualityData.quality); // Adjust path if needed
+                setDataQuality(qualityData.quality_score); // Adjust path if needed
                 setQualityChecked(true);
             } catch (error) {
                 console.error("Error fetching data quality:", error);

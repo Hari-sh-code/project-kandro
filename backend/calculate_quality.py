@@ -1,7 +1,13 @@
-import sys
 import pandas as pd
 import joblib
 import numpy as np
+import json
+import sys
+
+required_features = [
+    'missing_values', 'duplicate_rows', 'unique_values', 'mixed_data_types', 
+    'valid_range_values', 'outliers', 'class_balance', 'data_type_consistency'
+]
 
 def calculate_quality_metrics(df):
     quality_metrics = {}
@@ -60,6 +66,9 @@ def calculate_quality_metrics(df):
     if len(categorical_columns) > 0:
         quality_metrics['categorical_cardinality'] = df[categorical_columns].nunique().mean() * 100
 
+    # Ensure we have exactly the required features
+    quality_metrics = {key: quality_metrics.get(key, 0) for key in required_features}
+
     return quality_metrics
 
 def load_model(filename='dataset_quality_model_xgb.pkl'):
@@ -73,7 +82,8 @@ def load_model(filename='dataset_quality_model_xgb.pkl'):
 def predict_quality_score(model, df):
     """Predict the quality score."""
     metrics = calculate_quality_metrics(df)
-    quality_score = model.predict([list(metrics.values())])
+    feature_vector = list(metrics.values())
+    quality_score = model.predict([feature_vector])
     return quality_score[0]
 
 def evaluate_quality_score(file_path):
@@ -81,22 +91,34 @@ def evaluate_quality_score(file_path):
     try:
         df = pd.read_csv(file_path)
     except FileNotFoundError:
-        print(f"Error: The dataset file {file_path} was not found.")
         return None
 
     model = load_model()
-
     if model is None:
-        print("Error: Model could not be loaded.")
         return None
 
     quality_score = predict_quality_score(model, df)
     return quality_score
 
-if __name__ == "__main__":
-    file_path = sys.argv[1]  # Get the file path from the command line argument
+# Main function to be executed when called from Node.js
+def main():
+    # Get the file path passed from Node.js (frontend)
+    file_path = sys.argv[1]  # Read file path from command line arguments
     quality_score = evaluate_quality_score(file_path)
+    
     if quality_score is not None:
-        print(f"The predicted quality score for the dataset is: {quality_score:.2f}%")
+        result = {
+            'status': 'success',
+            'quality_score': round(float(quality_score), 2)  # Ensure it's a native float
+        }
     else:
-        print("Could not calculate quality score.")
+        result = {
+            'status': 'error',
+            'message': 'Could not calculate quality score.'
+        }
+
+    # Print the result as JSON so Node.js can capture it
+    print(json.dumps(result))
+
+if __name__ == "__main__":
+    main()
