@@ -1,4 +1,3 @@
-import React from "react";
 import { CgSearch } from "react-icons/cg";
 import { MdAdd } from "react-icons/md";
 import Filter from "./Filter";

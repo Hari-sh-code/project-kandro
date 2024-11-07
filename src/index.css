@@ -19,3 +19,36 @@ h1 {
     @apply flex items-center justify-center hover:text-white px-3 py-1 rounded-2xl hover:cursor-pointer border hover:bg-gray-500;
   }
 }
+/* Slide-in from left animation */
+@keyframes slide-in-left {
+  0% {
+    transform: translateX(3%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Slide-in from bottom animation */
+@keyframes slide-in-bottom {
+  0% {
+    transform: translateY(4%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Classes to apply the animations */
+.slide-in-left {
+  animation: slide-in-left 1s ease-out forwards;
+}
+
+.slide-in-bottom {
+  animation: slide-in-bottom 1s ease-out forwards;
+}
+

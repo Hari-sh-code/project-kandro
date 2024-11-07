@@ -1,4 +1,3 @@
-import React from "react";
 import img1 from "../assets/iconify.png";
 import { IoMdStar } from "react-icons/io";
 import { FaEthereum } from "react-icons/fa";

@@ -1,70 +1,76 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const Home = () => {
+  const [text, setText] = useState("");
+  const fullText = "Our platform leverages blockchain technology to provide a secure marketplace for buying and selling datasets.";
+
+  useEffect(() => {
+    let index = 0;
+    const typingInterval = setInterval(() => {
+      setText((prev) => prev + fullText[index]);
+      index++;
+      if (index === fullText.length) {
+        clearInterval(typingInterval);
+      }
+    }, 50);
+    return () => clearInterval(typingInterval);
+  }, []);
+
   return (
-    <div>
-      <svg
-        width="1269"
-        height="630"
-        viewBox="0 0 1469 830"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g filter="url(#filter0_d_3_433)">
-          <path
-            d="M100 167C100 127.788 131.788 96 171 96H1298C1337.21 96 1369 127.788 1369 167V426C1369 591.685 1234.69 726 1069 726H171C131.788 726 100 694.212 100 655V167Z"
-            fill="url(#paint0_linear_3_433)"
-          />
-        </g>
-        <defs>
-          <filter
-            id="filter0_d_3_433"
-            x="0"
-            y="0"
-            width="1469"
-            height="830"
-            filterUnits="userSpaceOnUse"
-            colorInterpolationFilters="sRGB"
-          >
-            <feFlood floodOpacity="0" result="BackgroundImageFix" />
-            <feColorMatrix
-              in="SourceAlpha"
-              type="matrix"
-              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-              result="hardAlpha"
-            />
-            <feOffset dy="4" />
-            <feGaussianBlur stdDeviation="50" />
-            <feComposite in2="hardAlpha" operator="out" />
-            <feColorMatrix
-              type="matrix"
-              values="0 0 0 0 0.0503125 0 0 0 0 0.123345 0 0 0 0 0.191667 0 0 0 0.25 0"
-            />
-            <feBlend
-              mode="normal"
-              in2="BackgroundImageFix"
-              result="effect1_dropShadow_3_433"
-            />
-            <feBlend
-              mode="normal"
-              in="SourceGraphic"
-              in2="effect1_dropShadow_3_433"
-              result="shape"
-            />
-          </filter>
-          <linearGradient
-            id="paint0_linear_3_433"
-            x1="100"
-            y1="96"
-            x2="601.844"
-            y2="1106.86"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="#72EDF2" />
-            <stop offset="1" stopColor="#5151E5" />
-          </linearGradient>
-        </defs>
-      </svg>
+    <div className="w-full px-6">
+      <div className="flex justify-center w-full">
+        <div className="bg-white text-black rounded-lg w-full max-w-5xl p-8 mb-12 mt-12 slide-in-bottom">
+          {/* Header Section */}
+          <div className="flex items-center justify-between mb-10 slide-in-left gap-9">
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold mb-4">Welcome to Our Platform!</h1>
+              <p className="text-lg mb-6 h-12 leading-relaxed">
+                {text}
+                <span className="border-r-2 border-black animate-pulse"></span>
+              </p>
+            </div>
+            
+            <img src="/public/kandro.png" alt="Kandro Logo" className="object-contain ml-4" />
+          </div>
+
+          {/* Who's on Kandro Section */} 
+          <div className="bg-gray-100 rounded-lg p-8 slide-in-bottom">
+            <h2 className="text-2xl font-semibold mb-8 text-center">Who's on Kandro?</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+              <div className="p-6 bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+                <h3 className="text-xl font-medium mb-3">Learners</h3>
+                <p className="text-base">
+                  Access courses, competitions, and forums to deepen your knowledge.
+                </p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+                <h3 className="text-xl font-medium mb-3">Developers</h3>
+                <p className="text-base">
+                  Explore models, notebooks, and datasets for your projects.
+                </p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+                <h3 className="text-xl font-medium mb-3">Researchers</h3>
+                <p className="text-base">
+                  Utilize pre-trained models and datasets to advance ML research.
+                </p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+                <h3 className="text-xl font-medium mb-3">Data Providers</h3>
+                <p className="text-base">
+                  Securely share datasets and earn by contributing to innovations.
+                </p>
+              </div>
+              <div className="p-6 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
+                <h3 className="text-xl font-medium mb-3">Enterprises</h3>
+                <p className="text-base">
+                  Get tailored solutions for data needs and collaborate within our network.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
