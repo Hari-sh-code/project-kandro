@@ -6,10 +6,14 @@ import Datasets from "./Datasets/Datasets";
 import NavBar from "./NavBar/";
 import Models from "./Models/Models";
 import Discussion from "./Discussion/Discussion";
-import ViewDataset from "./Datasets/ViewDataset";
-import { DataProvider } from "./Context/DataContext";
 
-function App() {
+import { DataProvider } from "./context/DataContext";
+import { UploadData } from "./Datasets/UploadData";
+
+import ViewDataset from "./Datasets/ViewDataset";
+
+
+function App() {  
   return (
     <BrowserRouter>
       <Header />
@@ -23,6 +27,7 @@ function App() {
             <Route path="/datasets/:id" element={<ViewDataset />} />
             <Route path="/models" element={<Models />} />
             <Route path="/discussion" element={<Discussion />} />
+            <Route path="/upload file" element={<UploadData/>}/>
           </Routes>
         </DataProvider>
       </div>

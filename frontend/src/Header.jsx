@@ -1,7 +1,45 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { VscAccount } from "react-icons/vsc";
+import Web3 from "web3";
+import { IoMdCloseCircle } from "react-icons/io";
+import { MdContentCopy } from "react-icons/md";
 
 const NavBar = () => {
+
+    const [isOpen, setIsOpen] = useState(false);
+    const [account, setAccount] = useState("");
+    const [copyStatus, setCopyStatus] = useState("Copy");
+    // Toggle the slide panel
+    const toggleSlide = () => setIsOpen(!isOpen);
+  
+    // Connect to MetaMask and get the account address
+    const connectMetaMask = async () => {
+      if (window.ethereum) {
+        try {
+          const web3 = new Web3(window.ethereum);
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          const accounts = await web3.eth.getAccounts();
+          if (accounts.length > 0) setAccount(accounts[0]);
+        } catch (error) {
+          console.error("MetaMask connection error:", error);
+        }
+      } else {
+        alert("Please install MetaMask!");
+      }
+    };
+  
+    useEffect(() => {
+      if (isOpen && !account) {
+        connectMetaMask();
+      }
+    }, [isOpen]);
+    const handleCopy = () => {
+      navigator.clipboard.writeText(account);
+      setCopyStatus("Copied!");
+  
+      // Reset the copy status after a short delay
+      setTimeout(() => setCopyStatus("Copy"), 2000);
+    };
   return (
     <div className="p-2 border-b">
       <div className="px-2 flex items-center justify-between">
@@ -112,7 +150,58 @@ const NavBar = () => {
           <span className="">andro</span>
         </h1>
 
-        <VscAccount className="h-10 w-10" />
+        <VscAccount className="h-10 w-10"onClick={toggleSlide} />
+      </div>
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={toggleSlide}
+        />
+      )}
+
+      {/* Slide-in panel */}
+      <div
+        className={`fixed top-0 right-0 h-full w-84 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+<div className="p-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold">Account Details</h2>
+            <button
+              className="text-4xl text-gray-600 hover:text-gray-800"
+              onClick={toggleSlide}
+              aria-label="Close"
+            >
+              <IoMdCloseCircle />
+            </button>
+          </div>
+          
+          {account ? (
+            <div className="mt-4">
+              <p className="font-semibold">Address:</p>
+              <div className="flex items-center gap-2">
+                <p className="break-words text-sm text-gray-700">{account}</p>
+                <button
+                  onClick={handleCopy}
+                  className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
+                  aria-label="Copy address"
+                >
+                  <MdContentCopy /> <span>{copyStatus}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-4">No account connected</p>
+          )}
+          
+          <button
+            className="mt-6 px-4 py-2 bg-gray-800 hover:bg-gray-600 text-white rounded-md w-full"
+            onClick={connectMetaMask}
+          >
+            {account ? "Refresh Account" : "Connect MetaMask"}
+          </button>
+        </div>
       </div>
     </div>
   );
