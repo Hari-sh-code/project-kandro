@@ -4,6 +4,7 @@ const DataContext = createContext({});
 
 export const DataProvider = ({ children }) => {
   const [filter, setFilter] = useState(0);
+  const [searchVal, setSearchVal] = useState("");
 
   const [datasets, setDatasets] = useState([
     {
@@ -142,27 +143,35 @@ export const DataProvider = ({ children }) => {
 
   useEffect(() => {
     const applyFilter = () => {
-      let result;
+      let result = datasets;
 
+      // Apply filter conditions
       if (filter === 1) {
         const twoDaysAgo = new Date();
         twoDaysAgo.setHours(twoDaysAgo.getHours() - 48);
-        result = datasets.filter(
+        result = result.filter(
           (dataset) => new Date(dataset.time) >= twoDaysAgo
         );
       } else if (filter === 2) {
-        result = [...datasets].sort((a, b) => b.quality - a.quality);
+        result = [...result].sort((a, b) => b.quality - a.quality);
       } else if (filter === 3) {
-        result = [...datasets].sort((a, b) => b.rating - a.rating);
-      } else {
-        result = datasets;
+        result = [...result].sort((a, b) => b.rating - a.rating);
+      }
+
+      // Apply search filter
+      if (searchVal.trim() !== "") {
+        result = result.filter(
+          (dataset) =>
+            dataset.name.toLowerCase().includes(searchVal.toLowerCase()) ||
+            dataset.owner.toLowerCase().includes(searchVal.toLowerCase())
+        );
       }
 
       setFilteredDatasets(result);
     };
 
     applyFilter();
-  }, [datasets, filter]);
+  }, [datasets, filter, searchVal]);
 
   const handleFilter = (val) => {
     setFilter(val);
@@ -170,7 +179,12 @@ export const DataProvider = ({ children }) => {
 
   return (
     <DataContext.Provider
-      value={{ filter, handleFilter, datasets: filteredDatasets }}
+      value={{
+        filter,
+        handleFilter,
+        datasets: filteredDatasets,
+        setSearchVal,
+      }}
     >
       {children}
     </DataContext.Provider>

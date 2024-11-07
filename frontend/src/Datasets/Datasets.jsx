@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useContext, useState } from "react";
 import { CgSearch } from "react-icons/cg";
 import { MdAdd } from "react-icons/md";
 import Filter from "./Filter";
 import DataGrid from "./DataGrid";
 import { Link } from "react-router-dom";
+import DataContext from "../Context/DataContext";
+
 const Datasets = () => {
+  const { setSearchVal } = useContext(DataContext);
   return (
     <>
       <div className="flex flex-col basis-full overflow-auto h-screen bg-gray-50">
@@ -19,6 +22,7 @@ const Datasets = () => {
                 <CgSearch className="h-6 w-6 pl-1 text-gray-600" />
               </label>
               <input
+                onChange={(e) => setSearchVal(e.target.value.toLowerCase())}
                 className="outline-none text-lg text-gray-600 rounded-r-full bg-transparent"
                 type="text"
                 id="datasetInp"
@@ -26,10 +30,12 @@ const Datasets = () => {
               />
             </form>
           </div>
-          <Link className="flex items-center justify-center rounded-full bg-black text-white border-black border-2 pr-3" to={"/upload file"}>
+          <Link
+            className="flex items-center justify-center rounded-full bg-black text-white border-black border-2 pr-3"
+            to={"/upload file"}
+          >
             <MdAdd className="h-8 w-8" />
             <div className="text-2xl flex items-center pb-1">Dataset</div>
-
           </Link>
         </div>
         <div className="px-5">
