@@ -4,7 +4,7 @@ import Web3 from "web3";
 import { IoMdCloseCircle } from "react-icons/io";
 import { MdContentCopy } from "react-icons/md";
 
-const NavBar = () => {
+const Header = () => {
 
     const [isOpen, setIsOpen] = useState(false);
     const [account, setAccount] = useState("");
@@ -207,4 +207,4 @@ const NavBar = () => {
   );
 };
 
-export default NavBar;
+export default Header;
