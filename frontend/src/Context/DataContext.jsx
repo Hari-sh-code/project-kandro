@@ -63,7 +63,6 @@ export const DataProvider = ({ children }) => {
           });
         }
         setDatasets(loadedDatasets);
-        console.log(loadedDatasets);
       } catch (error) {
         console.error("Error fetching data from the blockchain:", error);
       } finally {

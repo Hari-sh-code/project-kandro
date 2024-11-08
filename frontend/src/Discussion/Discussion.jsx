@@ -1,52 +1,85 @@
 import React, { useState, useRef, useEffect } from "react";
 import { BsFillSendFill } from "react-icons/bs";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
-import { MdAutoDelete } from "react-icons/md";
+import { MdAutoDelete, MdReportProblem } from "react-icons/md";
+import axios from "axios";
 import Popup from "../PopupComponents/popup";
-import { MdReportProblem } from "react-icons/md";// Import the Popup component
 
 const Discussion = () => {
+  const [topics, setTopics] = useState([]); // Topics state
   const [selectedTopic, setSelectedTopic] = useState(null);
-  const [showDeletePopup, setShowDeletePopup] = useState(false); // State for end discussion popup
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showCreatePopup, setShowCreatePopup] = useState(false);
-  const [showReportpopup,setshowreportpopup] =useState(false) // State for create discussion popup
-  const [newTopicName, setNewTopicName] = useState(""); // State for new topic name input
+  const [showReportPopup, setShowReportPopup] = useState(false);
+  const [newTopicName, setNewTopicName] = useState("");
+  const [message, setMessage] = useState("");
   const inputRef = useRef(null);
-  const userId = "currentUser"; // Replace this with actual user ID or username
+  const userId = "currentUser"; // Replace with actual user ID
 
-  const topics = [
-    { id: 1, name: "UI/UX", createdBy: "currentUser" },
-    { id: 2, name: "Frontend Development", createdBy: "anotherUser" },
-    { id: 3, name: "Backend Development", createdBy: "currentUser" },
-    { id: 4, name: "Blockchain", createdBy: "currentUser" },
-    { id: 5, name: "Machine Learning", createdBy: "anotherUser" },
-  ];
+  // Fetch topics created by the current user on component mount
+  useEffect(() => {
+    const fetchUserTopics = async () => {
+      try {
+        const response = await axios.get(`http://localhost:9000/api/topics/${userId}`);
+        setTopics(response.data);
+      } catch (error) {
+        console.error("Error fetching topics:", error);
+      }
+    };
+    fetchUserTopics();
+  }, [userId]);
 
+  // Handle topic selection
   const handleTopicClick = (topic) => {
     setSelectedTopic(topic);
   };
 
+  // Handle ending a discussion (delete a topic)
   const handleEndDiscussion = () => {
-    setShowDeletePopup(true); // Show popup when "End Discussion" is clicked
+    setShowDeletePopup(true);
   };
 
-  const confirmEndDiscussion = () => {
-    setShowDeletePopup(false);
-    setSelectedTopic(null); // Close the selected topic if confirmed
+  const confirmEndDiscussion = async () => {
+    try {
+      await axios.delete(`http://localhost:9000/api/topics/${selectedTopic._id}`);
+      setTopics(topics.filter((topic) => topic._id !== selectedTopic._id));
+      setSelectedTopic(null);
+      setShowDeletePopup(false);
+    } catch (error) {
+      console.error("Error ending discussion:", error);
+    }
   };
 
-  const handleCreateDiscussion = () => {
-    setShowCreatePopup(true); // Show popup for creating a new discussion
-  };
-  const handlereport =()=>{
-    setshowreportpopup(true)
-  }
-
-  const handleCreateNewTopic = () => {
+  // Handle creating a new discussion topic
+  const handleCreateNewTopic = async () => {
     if (newTopicName.trim()) {
-      topics.push({ id: topics.length + 1, name: newTopicName, createdBy: userId });
-      setNewTopicName("");
-      setShowCreatePopup(false);
+      try {
+        const response = await axios.post("http://localhost:9000/api/topics", {
+          name: newTopicName,
+          createdBy: userId,
+        });
+        setTopics([...topics, response.data]);
+        setNewTopicName("");
+        setShowCreatePopup(false);
+      } catch (error) {
+        console.error("Error creating new topic:", error);
+      }
+    }
+  };
+
+  // Handle sending a message
+  const handleSendMessage = async () => {
+    if (message.trim()) {
+      try {
+        const response = await axios.post(
+          `http://localhost:9000/api/topics/${selectedTopic._id}/messages`,
+          { sender: userId, text: message }
+        );
+        setSelectedTopic(response.data); // Update selected topic with new message
+        setMessage("");
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
     }
   };
 
@@ -60,6 +93,7 @@ const Discussion = () => {
     <div className="flex flex-col basis-full min-h-screen bg-gray-50">
       <div className="text-4xl p-5 font-medium text-gray-800">Discussion</div>
 
+      {/* Topic List or Chat View */}
       {!selectedTopic ? (
         <div className="p-5">
           <div className="flex gap-6 mb-4">
@@ -70,24 +104,22 @@ const Discussion = () => {
             />
             <button
               className="px-4 py-3 bg-gray-800 text-white font-semibold rounded-lg shadow-md hover:bg-slate-800 transition"
-              onClick={handleCreateDiscussion}
+              onClick={() => setShowCreatePopup(true)}
             >
               Create Discussion
             </button>
           </div>
           <h2 className="text-2xl font-semibold mb-4 text-gray-700">Topics</h2>
           <ul className="space-y-3">
-            {topics
-              .filter((topic) => topic.createdBy === userId)
-              .map((topic) => (
-                <li
-                  key={topic.id}
-                  onClick={() => handleTopicClick(topic)}
-                  className="cursor-pointer p-3 bg-gray-200 rounded-lg hover:bg-gray-300 transition text-gray-800"
-                >
-                  {topic.name}
-                </li>
-              ))}
+            {topics.map((topic) => (
+              <li
+                key={topic._id}
+                onClick={() => handleTopicClick(topic)}
+                className="cursor-pointer p-3 bg-gray-200 rounded-lg hover:bg-gray-300 transition text-gray-800"
+              >
+                {topic.name}
+              </li>
+            ))}
           </ul>
         </div>
       ) : (
@@ -102,97 +134,61 @@ const Discussion = () => {
 
             {selectedTopic.createdBy === userId && (
               <div className="flex gap-6 items-center">
-              {/* Report Button with Tooltip */}
-              <div className="relative group">
-                <button className="text-3xl text-red-950" onClick={handlereport}>
+                <button className="text-3xl text-red-950" onClick={() => setShowReportPopup(true)}>
                   <MdReportProblem />
                 </button>
-                <span className="absolute -top-14 left-1/2 transform -translate-x-1/2 text-sm text-white bg-gray-800 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  Report Issue
-                </span>
+                <button
+                  onClick={handleEndDiscussion}
+                  className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition flex items-center"
+                >
+                  <MdAutoDelete className="mr-2 text-xl" />
+                  End Discussion
+                </button>
               </div>
-            
-              {/* End Discussion Button */}
-              <button
-                onClick={handleEndDiscussion}
-                className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition flex items-center"
-              >
-                <MdAutoDelete className="mr-2 text-xl" />
-                End Discussion
-              </button>
-            </div>
-
             )}
           </div>
 
+          {/* Message List */}
           <div className="bg-white p-4 rounded-lg shadow-inner flex-grow overflow-y-auto flex flex-col space-y-4 mb-4">
-            <div className="self-start bg-gray-200 p-3 rounded-md shadow-md max-w-xs text-gray-800">
-              <strong>User1:</strong> What’s the best way to approach UI/UX design?
-            </div>
-            <div className="self-end bg-gray-800 text-white p-3 rounded-md shadow-md max-w-xs">
-              <strong>User2:</strong> I’d recommend starting with user research and wireframing!
-            </div>
+            {selectedTopic.messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`p-3 rounded-md shadow-md max-w-xs ${msg.sender === userId ? "self-end bg-gray-800 text-white" : "self-start bg-gray-200 text-gray-800"}`}
+              >
+                <strong>{msg.sender}:</strong> {msg.text}
+              </div>
+            ))}
           </div>
 
+          {/* Message Input */}
           <div className="flex items-center">
             <input
               type="text"
               placeholder="Type your message..."
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500 transition"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               ref={inputRef}
             />
-            <button className="ml-2 p-3 rounded-lg bg-gray-800 text-white shadow-md hover:bg-gray-700 transition">
+            <button
+              className="ml-2 p-3 rounded-lg bg-gray-800 text-white shadow-md hover:bg-gray-700 transition"
+              onClick={handleSendMessage}
+            >
               <BsFillSendFill className="text-xl" />
             </button>
           </div>
         </div>
       )}
 
-      {/* End Discussion Confirmation Popup */}
+      {/* Popups */}
       <Popup trigger={showDeletePopup} onClose={() => setShowDeletePopup(false)}>
         <div className="text-gray-700 mb-4">Are you sure you want to end this discussion?</div>
         <div className="flex justify-end gap-4">
-          <button
-            onClick={() => setShowDeletePopup(false)}
-            className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition"
-          >
-            No
-          </button>
-          <button
-            onClick={confirmEndDiscussion}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
-          >
-            Yes
-          </button>
+          <button onClick={() => setShowDeletePopup(false)} className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition">No</button>
+          <button onClick={confirmEndDiscussion} className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition">Yes</button>
         </div>
       </Popup>
-      <Popup trigger={showReportpopup} onClose={() => setshowreportpopup(false)}>
-          <div className="p-4 text-center">
-            <h1 className="text-lg font-semibold mb-4">
-              Report Chat Activity
-            </h1>
-            <p className="text-sm text-gray-700 mb-6">
-              By clicking "Report," you are flagging any illegal or inappropriate activities within the chat.
-            </p>
-            <div className="flex justify-between mx-[190px]">
-            <button
-              onClick={() => setshowreportpopup(false)}
-              className="px-4 py-2 bg-slate-800 text-white font-medium rounded-md hover:bg-slate-600 transition"
-            >
-              Close
-            </button>
-            <button
-              onClick={() => setshowreportpopup(false)}
-              className="px-4 py-2 bg-red-500 text-white font-medium rounded-md hover:bg-red-600 transition"
-            >
-              Report
-            </button>
-            </div>
-            
-          </div>
-        </Popup>
 
-      {/* Create Discussion Popup */}
       <Popup trigger={showCreatePopup} onClose={() => setShowCreatePopup(false)}>
         <div className="text-gray-700 mb-4">
           <h2 className="text-xl font-semibold mb-4">Create New Discussion</h2>
@@ -204,19 +200,17 @@ const Discussion = () => {
             className="w-full p-3 border border-gray-300 rounded-lg mb-4"
           />
           <div className="flex justify-between">
-            <button
-              onClick={() => setShowCreatePopup(false)}
-              className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCreateNewTopic}
-              className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-600 transition"
-            >
-              Create
-            </button>
+            <button onClick={() => setShowCreatePopup(false)} className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition">Cancel</button>
+            <button onClick={handleCreateNewTopic} className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-600 transition">Create</button>
           </div>
+        </div>
+      </Popup>
+
+      <Popup trigger={showReportPopup} onClose={() => setShowReportPopup(false)}>
+        <div className="p-4 text-center">
+          <h1 className="text-lg font-semibold mb-4">Report Chat Activity</h1>
+          <p className="text-sm text-gray-700 mb-6">By clicking "Report," you are flagging any illegal or inappropriate activities within this discussion.</p>
+          <button onClick={() => setShowReportPopup(false)} className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-700 transition">Report</button>
         </div>
       </Popup>
     </div>
