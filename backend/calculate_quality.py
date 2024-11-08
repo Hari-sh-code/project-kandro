@@ -1,19 +1,88 @@
+import argparse
+import json
 import pandas as pd
 import joblib
 import numpy as np
-import json
 import sys
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
 from sklearn.ensemble import IsolationForest
-from pyod.models.knn import KNN
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder
+
+# Ensure necessary NLTK resources are downloaded
+nltk.download('stopwords')
 
 # Define the required features for quality evaluation
 required_features = [
-    'missing_values', 'duplicate_rows', 'unique_values', 'mixed_data_types', 
+    'missing_values', 'duplicate_rows', 'unique_values', 'mixed_data_types',
     'valid_range_values', 'outliers', 'class_balance', 'data_type_consistency'
 ]
 
-# Step 3: Calculate dataset quality metrics
+# Step 1: Load malicious words from "vulger.txt" file
+def load_malicious_words(file_path='vulger.txt'):
+    """Load malicious words from the file into a list."""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            malicious_words = file.read().splitlines()
+        return malicious_words
+    except FileNotFoundError:
+        print(f"Error: The file {file_path} was not found.")
+        return []
+
+# Step 2: Clean the text (remove punctuation and convert to lowercase)
+def clean_text(text):
+    """Remove punctuation, special characters, and convert to lowercase."""
+    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    text = text.lower()  # Convert text to lowercase
+    text = re.sub(r'\s+', ' ', text).strip()  # Remove extra spaces
+    return text
+
+# Step 3: Tokenize the text into words
+def tokenize_text(text_data):
+    """Tokenize each line of text into words."""
+    cleaned_data = [clean_text(text) for text in text_data]  # Clean text
+    tokenized_data = [text.split() for text in cleaned_data]  # Tokenize each line
+    return tokenized_data
+
+# Step 4: Remove stopwords
+def remove_stopwords(tokenized_data):
+    """Remove common stopwords from the tokenized text."""
+    stop_words = set(stopwords.words('english'))
+    return [[word for word in tokens if word not in stop_words] for tokens in tokenized_data]
+
+# Step 5: Stemming (optional)
+def stem_tokens(tokenized_data):
+    """Apply stemming to each token."""
+    stemmer = PorterStemmer()
+    return [[stemmer.stem(word) for word in tokens] for tokens in tokenized_data]
+
+# Step 6: Detect malicious words in the text
+def detect_malicious_words_in_text(tokenized_data, malicious_words):
+    """Detect malicious words in the tokenized text."""
+    malicious_word_count = 0
+    for tokens in tokenized_data:
+        malicious_word_count += sum(1 for word in tokens if word in malicious_words)
+    return malicious_word_count
+
+# Load pre-trained model for quality scoring (for dataset processing)
+def load_model(filename='dataset_quality_model_xgb.pkl'):
+    """Load the pre-trained model."""
+    try:
+        return joblib.load(filename)
+    except FileNotFoundError:
+        print(f"Error: The model file {filename} was not found.")
+        return None
+
+# Predict the quality score (using pre-trained model)
+def predict_quality_score(model, metrics):
+    """Predict the quality score."""
+    metrics_reshaped = np.array(metrics).reshape(1, -1)  # Ensure 1 sample with 8 features
+    quality_score = model.predict(metrics_reshaped)
+    return quality_score[0]
+
+# Calculate dataset quality metrics (for dataset CSV)
 def calculate_quality_metrics(df):
     quality_metrics = {}
 
@@ -66,90 +135,119 @@ def calculate_quality_metrics(df):
 
     return quality_metrics
 
-# Load pre-trained model
-def load_model(filename='dataset_quality_model_xgb.pkl'):
-    """Load the pre-trained model."""
-    try:
-        return joblib.load(filename)
-    except FileNotFoundError:
-        print(f"Error: The model file {filename} was not found.")
-        return None
+# Detect malicious words in the dataset (for CSV datasets)
+def detect_malicious_words(df, malicious_words):
+    malicious_count = 0
+    # Iterate over each column in the dataset
+    for column in df.columns:
+        if df[column].dtype == 'object':  # Check if the column is of string type
+            for value in df[column].astype(str):  # Convert to string if not already
+                # Clean the value: convert to lowercase, remove punctuation, strip spaces
+                cleaned_value = re.sub(r'[^\w\s]', '', value.lower()).strip()  # Clean value
+                
+                # Check for malicious words in the cleaned value (partial matches allowed)
+                if any(malicious_word in cleaned_value for malicious_word in malicious_words):
+                    print(f"Found malicious word in: '{cleaned_value}'")  # Debugging line
+                    malicious_count += 1
+    return malicious_count
 
-# Predict the quality score
-def predict_quality_score(model, df):
-    """Predict the quality score."""
-    metrics = calculate_quality_metrics(df)
-    feature_vector = list(metrics.values())
-    quality_score = model.predict([feature_vector])
-    return quality_score[0]
+# Function to process and evaluate the text file (for text file analysis)
+def process_and_evaluate_text(file_path, malicious_words):
+    """Process the text file and evaluate the presence of malicious words."""
+    text_data = load_text_data(file_path)
+    if text_data is None:
+        return {'status': 'error', 'message': 'Text file not found.'}
 
-# Malicious Data and Fake Dataset Detection
-def detect_anomalies_and_fake_data(df):
-    # Select only numeric columns for scaling
-    numeric_columns = df.select_dtypes(include=[np.number]).columns
+    tokenized_data = tokenize_text(text_data)  # Tokenize the text
+    tokenized_data = remove_stopwords(tokenized_data)  # Remove stopwords
+    tokenized_data = stem_tokens(tokenized_data)  # Apply stemming
+    malicious_word_count = detect_malicious_words_in_text(tokenized_data, malicious_words)  # Detect malicious words
 
-    # If there are no numeric columns, raise an exception
-    if numeric_columns.empty:
-        raise ValueError("The dataset must contain numeric columns for scaling.")
-
-    # Scaling the numeric data for better performance in anomaly detection
-    scaler = StandardScaler()
-    scaled_data = scaler.fit_transform(df[numeric_columns])
-
-    # Apply Isolation Forest for malicious detection (Anomaly Detection)
-    isolation_forest = IsolationForest(contamination=0.05)
-    isolation_forest.fit(scaled_data)
-    predictions_if = isolation_forest.predict(scaled_data)
-
-    # Apply KNN for fake dataset detection (Outlier detection)
-    clf_knn = KNN()
-    clf_knn.fit(scaled_data)
-    predictions_knn = clf_knn.predict(scaled_data)
-
-    # Check if there are any outliers or anomalies
-    malicious_found = np.any(predictions_if == -1)  # True if any anomaly is detected
-
-    # Fake dataset detection (checking for duplicates)
-    duplicates = df.duplicated().any()  # True if any duplicate is found
-
-    return malicious_found, duplicates
-
-# Evaluate quality score for the uploaded dataset file
-def evaluate_quality_score(file_path):
-    """Load dataset, make prediction, and return quality score."""
-    try:
-        df = pd.read_csv(file_path)
-    except FileNotFoundError:
-        return {'status': 'error', 'message': 'Dataset file not found.'}
-
-    model = load_model()
-    if model is None:
-        return {'status': 'error', 'message': 'Model not found.'}
-
-    # Step 3: Detect anomalies (malicious) and fake data
-    malicious_found, fake_data_found = detect_anomalies_and_fake_data(df)
-
-    # Step 4: Predict the quality score
-    quality_score = predict_quality_score(model, df)
-
-    # Combine results
+    # Return result
     result = {
-        'status': 'success',
-        'quality_score': round(float(quality_score), 2),
-        'malicious_data_found': bool(malicious_found),  # Convert to standard Python bool
-        'fake_data_found': bool(fake_data_found)        # Convert to standard Python bool
+        'total_malicious_words': malicious_word_count,
+        'processed_data_sample': tokenized_data[:5]  # Show sample of processed data (first 5 lines)
     }
 
     return result
 
-# Main function to be executed when called from Node.js
-def main():
-    # Get the file path passed from Node.js (frontend)
-    file_path = sys.argv[1]  # Read file path from command line arguments
-    result = evaluate_quality_score(file_path)
+# Anomaly detection using IsolationForest
+def preprocess_data(dataset):
+    """Preprocess the dataset to convert categorical data to numeric."""
+    # Identify categorical columns
+    categorical_cols = dataset.select_dtypes(include=['object']).columns
 
-    # Return the result as JSON
-    print(json.dumps(result, indent=4))
+    # Apply Label Encoding for categorical columns
+    label_encoder = LabelEncoder()
+    for col in categorical_cols:
+        dataset[col] = label_encoder.fit_transform(dataset[col].astype(str))
+
+    return dataset
+
+def detect_anomalies(dataset):
+    # Preprocess the dataset to handle categorical data
+    dataset = preprocess_data(dataset)
+
+    # Now apply IsolationForest
+    model = IsolationForest(contamination=0.1)  # Adjust contamination rate based on your use case
+    model.fit(dataset)
+    dataset['anomaly'] = model.predict(dataset)
+    anomalies = dataset[dataset['anomaly'] == -1]
+    return anomalies
+
+# Data quality checks
+def data_quality_checks(dataset):
+    missing_values = dataset.isnull().sum()
+    duplicates = dataset.duplicated().sum()
+    data_types = dataset.dtypes.apply(lambda x: str(x))
+    return missing_values.to_dict(), duplicates, data_types.to_dict()
+
+# Schema validation
+def validate_schema(dataset, expected_schema):
+    columns_match = set(dataset.columns) == set(expected_schema.keys())
+    data_types_match = all(dataset[column].dtype == expected_schema[column] for column in expected_schema)
+    return columns_match and data_types_match
+
+# Evaluate quality score for CSV or text file, including anomaly detection
+def evaluate_quality_score(dataset_file, malicious_words):
+    """Evaluate the dataset file quality, detect malicious words, and perform anomaly detection."""
+    try:
+        df = pd.read_csv(dataset_file)
+    except FileNotFoundError:
+        print(f"Error: The file {dataset_file} was not found.")
+        return None
+
+    # Calculate dataset quality metrics
+    quality_metrics = calculate_quality_metrics(df)
+    print(f"Calculated quality metrics: {quality_metrics}")
+
+    # Predict the quality score
+    model = load_model()
+    if model is not None:
+        quality_score = predict_quality_score(model, list(quality_metrics.values()))
+        print(f"Predicted quality score: {quality_score}")
+    else:
+        print("Model not loaded. Unable to predict quality score.")
+    
+    # Detect malicious words
+    malicious_word_count = detect_malicious_words(df, malicious_words)
+    print(f"Found {malicious_word_count} instances of malicious words.")
+
+    # Anomaly detection
+    anomalies = detect_anomalies(df)
+    if not anomalies.empty:
+        print(f"Detected {len(anomalies)} anomalies in the dataset.")
+        print(anomalies)
+    else:
+        print("No anomalies detected in the dataset.")
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Evaluate dataset quality and detect malicious content.")
+    parser.add_argument("dataset_file", help="Path to the dataset file (CSV format).")
+    args = parser.parse_args()
+
+    malicious_words = load_malicious_words()  # Load malicious words from the file
+
+    # Evaluate the dataset file
+    evaluate_quality_score(args.dataset_file, malicious_words)
+
