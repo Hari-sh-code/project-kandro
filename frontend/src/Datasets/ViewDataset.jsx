@@ -6,14 +6,11 @@ import DataContext from "../Context/DataContext";
 import { FaEthereum } from "react-icons/fa";
 import { IoMdStar } from "react-icons/io";
 
-// Helper function to convert Unix timestamp to IST (Indian Standard Time)
-const convertToIST = (timestamp) => {
-  console.log("Original Timestamp:", timestamp); // Debug the original timestamp
-
-  // Ensure timestamp is in seconds, multiply by 1000 if in milliseconds
-  const date = new Date(timestamp * 1000); // Convert to milliseconds if in seconds
-  const istOffset = 5.5 * 60; // IST is UTC + 5 hours 30 minutes
-  const istDate = new Date(date.getTime() + istOffset * 60000); // Apply IST offset
+// Helper function to get today's date in IST (Indian Standard Time)
+const getTodayInIST = () => {
+  const today = new Date(); // Get current date
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC + 5 hours 30 minutes (in milliseconds)
+  const istDate = new Date(today.getTime() + istOffset); // Apply IST offset
 
   return istDate;
 };
@@ -40,8 +37,8 @@ const ViewDataset = () => {
     }
   };
 
-  // Convert timestamp to IST
-  const timestampInIST = convertToIST(dataset.timestamp);
+  // Use today's date in IST
+  const timestampInIST = getTodayInIST();
   const formattedTimestamp = timestampInIST.toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
   });
@@ -109,7 +106,7 @@ const ViewDataset = () => {
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-lg">
-                  <strong>Uploaded on:</strong> {formattedTimestamp}
+                  <strong>Uploaded on:</strong> {formattedTimestamp.slice(0, 9)}
                 </p>
                 <button className="bg-black text-white px-3 py-1 mt-4 pb-2 text-2xl rounded-full">
                   Buy
