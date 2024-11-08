@@ -16,19 +16,14 @@ export const DataProvider = ({ children }) => {
 
   // Helper function to convert timestamp to IST (Indian Standard Time)
   const convertToIST = (timestamp) => {
-    console.log("Original Timestamp:", timestamp); // Debugging line to check
-
-    // Convert timestamp to a number if it's a string
     const timestampNumber = parseInt(timestamp, 10); // Convert the string to a number
-
     if (isNaN(timestampNumber)) {
       console.error("Invalid timestamp:", timestamp);
       return new Date(); // Return the current date if timestamp is invalid
     }
-
     const date = new Date(timestampNumber * 1000); // Convert to milliseconds if in seconds
-    const istOffset = 5.5 * 60; // IST is UTC + 5 hours 30 minutes
-    const istDate = new Date(date.getTime() + istOffset * 60000); // Apply IST offset
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC + 5 hours 30 minutes (in milliseconds)
+    const istDate = new Date(date.getTime() + istOffset); // Apply IST offset
 
     return istDate;
   };
@@ -49,14 +44,15 @@ export const DataProvider = ({ children }) => {
 
           // Convert the timestamp to IST before storing it in the dataset
           const timestampInIST = convertToIST(dataset.timestamp);
+          const dateOnly = timestampInIST.toLocaleDateString("en-IN", {
+            timeZone: "Asia/Kolkata",
+          });
 
           loadedDatasets.push({
             id: dataset.id.toString(), // Convert BigNumber to string
             name: dataset.name,
             owner: dataset.owner,
-            timestamp: timestampInIST.toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
-            }), // Format timestamp in IST
+            timestamp: dateOnly, // Only include the date part
             quality: dataset.quality.toString(),
             rating: parseFloat(dataset.rating.toString()), // Make sure rating is a number
             price: parseFloat(dataset.price.toString()), // Make sure price is a number

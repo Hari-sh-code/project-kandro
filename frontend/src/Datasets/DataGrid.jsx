@@ -8,14 +8,11 @@ import { ThreeDot } from "react-loading-indicators";
 
 // Helper function to convert Unix timestamp to IST (Indian Standard Time)
 const convertToIST = (timestamp) => {
-  // Convert string timestamp to a number (in seconds)
   const timestampNumber = parseInt(timestamp, 10); // Convert the string to a number
-
   if (isNaN(timestampNumber)) {
     console.error("Invalid timestamp:", timestamp);
     return new Date(); // Return the current date if timestamp is invalid
   }
-
   const date = new Date(timestampNumber * 1000); // Convert to milliseconds if in seconds
   const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC + 5 hours 30 minutes (in milliseconds)
   const istDate = new Date(date.getTime() + istOffset); // Apply IST offset
@@ -47,15 +44,6 @@ const DataGrid = () => {
           {/* Check if datasets have content */}
           {datasets.length > 0 ? (
             datasets.map((data) => {
-              // Convert the timestamp to IST
-              const timestampInIST = convertToIST(data.timestamp);
-              const formattedTimestamp = timestampInIST.toLocaleString(
-                "en-IN",
-                {
-                  timeZone: "Asia/Kolkata",
-                }
-              );
-
               return (
                 <Link
                   to={`/datasets/${data.id}`}
