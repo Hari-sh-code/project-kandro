@@ -1,85 +1,74 @@
-// server.js
-const express = require("express");
-const multer = require("multer");
-const cors = require("cors");
-const { ethers } = require("ethers"); // Import ethers library
-
+const express = require('express');
+const multer = require('multer');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const FormData = require('form-data'); // Correct import
+const { spawn } = require('child_process'); // Make sure to import spawn for Python script execution
 const app = express();
 const PORT = 9000;
 
 // Enable CORS for all routes
 app.use(cors());
 
-// Parse JSON requests
-app.use(express.json());
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
 
-// Configure multer to save uploaded files to a temporary directory
-const upload = multer({ dest: "uploads/" });
+// Set up multer for file uploads
+const upload = multer({
+    dest: uploadDir,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype !== 'text/csv') {
+            return cb(new Error('Only CSV files are allowed'), false);
+        }
+        cb(null, true);
+    }
+});
 
-// Ethereum provider and wallet configuration
-const provider = new ethers.providers.Web3Provider(window.ethereum); // Replace with your Alchemy URL
+// Data Quality Check endpoint (calls Python script for analysis)
+app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
 
-const wallet = new ethers.Wallet(
-  "31e03fec28c225d9e20a433d5462293500b6756b277c3beb100ca62b422b4905",
-  provider
-); // Replace with your private key
+        const filePath = path.join(uploadDir, req.file.filename);
 
-// Smart contract address and ABI
-const contractAddress = "0x8C9C95A830b7E7e86f2f12DB88e911499A6f695f"; // Replace with your contract address
-const contractABI = [
-  {
-    inputs: [
-      { internalType: "string", name: "_name", type: "string" },
-      { internalType: "string", name: "_owner", type: "string" },
-      { internalType: "uint256", name: "_quality", type: "uint256" },
-      { internalType: "uint256", name: "_rating", type: "uint256" },
-      { internalType: "uint256", name: "_price", type: "uint256" },
-      { internalType: "string", name: "_coverImg", type: "string" },
-      { internalType: "string", name: "_description", type: "string" },
-    ],
-    name: "addDataset",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "datasetCount",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "_id", type: "uint256" }],
-    name: "getDataset",
-    outputs: [
-      { internalType: "uint256", name: "id", type: "uint256" },
-      { internalType: "string", name: "name", type: "string" },
-      { internalType: "string", name: "owner", type: "string" },
-      { internalType: "uint256", name: "timestamp", type: "uint256" },
-      { internalType: "uint256", name: "quality", type: "uint256" },
-      { internalType: "uint256", name: "rating", type: "uint256" },
-      { internalType: "uint256", name: "price", type: "uint256" },
-      { internalType: "string", name: "coverImg", type: "string" },
-      { internalType: "string", name: "description", type: "string" },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
+        // Spawn Python process to calculate quality
+        const pythonProcess = spawn(process.env.PYTHON_PATH || 'python', ['calculate_quality.py', filePath]);
 
-// Create contract instance
-const datasetContract = new ethers.Contract(
-  contractAddress,
-  contractABI,
-  wallet
-);
+        let result = '';
+        pythonProcess.stdout.on('data', (data) => {
+            result += data.toString();
+        });
 
-// Endpoint to receive the file and respond with quality
-app.post("/api/data-quality-check", upload.single("file"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
+        pythonProcess.on('close', (code) => {
+            if (code === 0) {
+                try {
+                    const response = JSON.parse(result);
+                    res.json(response);
+                    fs.unlinkSync(filePath); // Cleanup after processing
+                } catch (err) {
+                    res.status(500).json({ error: 'Error parsing JSON from Python' });
+                    console.error("Error parsing JSON from Python:", err);
+                }
+            } else {
+                res.status(500).json({ error: 'Error calculating data quality' });
+            }
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            console.error(`Python error: ${data}`);
+            res.status(500).json({ error: 'Error in Python script' });
+        });
+    } catch (error) {
+        console.error('Error processing file:', error);
+        res.status(500).json({ error: 'Error processing file' });
     }
 
     console.log(`File received: ${req.file.originalname}`);
@@ -93,77 +82,49 @@ app.post("/api/data-quality-check", upload.single("file"), async (req, res) => {
   }
 });
 
-// Endpoint to store dataset information on blockchain
-app.post("/api/store-dataset", async (req, res) => {
-  try {
-    const { name, owner, quality, rating, price, coverImg, description } =
-      req.body;
-
-    // Validate the input
-    if (
-      !name ||
-      !owner ||
-      !quality ||
-      !rating ||
-      !price ||
-      !coverImg ||
-      !description
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Missing required dataset information" });
+// Endpoint to upload file to Pinata
+app.post('/api/upload-to-pinata', upload.single('file'), (req, res) => {
+    const file = req.file;
+  
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
     }
-
-    console.log("Storing dataset on blockchain...");
-
-    // Interact with the smart contract to store dataset information
-    const tx = await datasetContract.addDataset(
-      name,
-      owner,
-      quality,
-      rating,
-      price,
-      coverImg,
-      description
-    );
-    await tx.wait(); // Wait for transaction to be mined
-
-    res.json({ message: "Dataset stored successfully on blockchain" });
-  } catch (error) {
-    console.error("Error storing dataset on blockchain:", error);
-    res.status(500).json({ error: "Error storing dataset on blockchain" });
-  }
-});
-
-// Endpoint to retrieve dataset information from blockchain
-app.get("/api/block-info", async (req, res) => {
-  try {
-    const datasetCount = await datasetContract.getDatasetCount();
-    const datasets = [];
-
-    for (let i = 1; i <= datasetCount; i++) {
-      const dataset = await datasetContract.getDataset(i);
-      datasets.push({
-        id: dataset.id.toString(),
-        name: dataset.name,
-        owner: dataset.owner,
-        time: new Date(dataset.timestamp.toNumber() * 1000).toISOString(),
-        quality: dataset.quality.toNumber(),
-        rating: dataset.rating.toNumber(),
-        price: ethers.utils.formatUnits(dataset.price, "ether"),
-        coverImg: dataset.coverImg,
-        description: dataset.description,
+  
+    // Prepare FormData for Pinata
+    const form = new FormData();
+    form.append('file', fs.createReadStream(file.path));
+  
+    // Headers for Pinata request
+    const headers = {
+      ...form.getHeaders(),
+      pinata_api_key: "e414f68867a6d6731055",
+      pinata_secret_api_key: "e2f8c6fdb791e18c081da9a4fb73ebfdfef3144e1bf54f7b5b4e5be94cdac9b6",
+    };
+  
+    // Make the API request to Pinata
+    axios
+      .post('https://api.pinata.cloud/pinning/pinFileToIPFS', form, {
+        headers: headers,
+      })
+      .then((response) => {
+        // Send back the IPFS CID from Pinata
+        res.status(200).json({
+          success: true,
+          message: 'File uploaded successfully',
+          cid: response.data.IpfsHash,  // Pinata's response contains the CID (hash)
+        });
+      })
+      .catch((error) => {
+        console.error('Error uploading to Pinata:', error);
+        res.status(500).json({
+          error: 'Error uploading to Pinata',
+          details: error.response ? error.response.data : error.message,
+        });
+      })
+      .finally(() => {
+        fs.unlinkSync(file.path);  // Clean up the uploaded file after Pinata upload
       });
-    }
-
-    res.json(datasets);
-  } catch (error) {
-    console.error("Error retrieving datasets from blockchain:", error);
-    res
-      .status(500)
-      .json({ error: "Error retrieving datasets from blockchain" });
-  }
-});
+  });
 
 // Start the server
 app.listen(PORT, () => {
