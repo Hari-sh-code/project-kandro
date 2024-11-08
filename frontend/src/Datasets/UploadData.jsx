@@ -1,25 +1,23 @@
 import React, { useState } from "react";
-import { FaCloudUploadAlt } from "react-icons/fa";
+import { FaCloudUploadAlt, FaEthereum } from "react-icons/fa";
 import axios from 'axios';
 import Web3 from "web3";
-import { FaEthereum } from "react-icons/fa";
 
 export function UploadData() {
     const [file, setFile] = useState(null);
-    const [dataQuality, setDataQuality] = useState(null);
-    const [datasetType, setDatasetType] = useState("");
-    const [description, setDescription] = useState("");
     const [thumbnail, setThumbnail] = useState(null);
-    const [ethPrice, setEthPrice] = useState("");  // New state for ETH price
+    const [description, setDescription] = useState("");
+    const [datasetType, setDatasetType] = useState("");
+    const [username, setUsername] = useState("");
+    const [ethPrice, setEthPrice] = useState("");
+    const [dataQuality, setDataQuality] = useState(null);
+    const [userAddress, setUserAddress] = useState("");
+    const [cidcode, setCidcode] = useState("");
     const [qualityChecked, setQualityChecked] = useState(false);
     const [nextStep, setNextStep] = useState(false);
-    const [fileUploaded, setFileUploaded] = useState(false);
-    const [thumbnailUploaded, setThumbnailUploaded] = useState(false);
-    const [isThumbnailTooLarge, setIsThumbnailTooLarge] = useState(false);
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
-        setFileUploaded(true);
     };
 
     const handleQualityCheck = async () => {
@@ -31,11 +29,8 @@ export function UploadData() {
                 const response = await axios.post("http://localhost:9000/api/data-quality-check", formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
-                console.log("Full response:", response);
-                console.log("Response data:", response.data); // Log to inspect structure
-                console.log("Quality field:", response.data.quality);  // Confirm correct field name
                 const qualityData = response.data;
-                setDataQuality(qualityData.quality_score); // Adjust path if needed
+                setDataQuality(qualityData.quality_score); 
                 setQualityChecked(true);
             } catch (error) {
                 console.error("Error fetching data quality:", error);
@@ -43,60 +38,60 @@ export function UploadData() {
         }
     };
 
-    const handleThumbnailChange = (e) => {
-        const selectedFile = e.target.files[0];
-        if (selectedFile && selectedFile.size > 20480) {
-            alert("Please select an image less than 20 KB.");
-            setThumbnail(null);
-            setThumbnailUploaded(false);
-            setIsThumbnailTooLarge(true);
-        } else {
-            setThumbnail(selectedFile);
-            setThumbnailUploaded(true);
-            setIsThumbnailTooLarge(false);
+    const handleNext = async () => {
+        try {
+            if (window.ethereum) {
+                const web3 = new Web3(window.ethereum);
+                await window.ethereum.request({ method: "eth_requestAccounts" });
+                const accounts = await web3.eth.getAccounts();
+                setUserAddress(accounts[0]);
+
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const pinataResponse = await axios.post("http://localhost:9000/api/upload-to-pinata", formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+
+                setCidcode(pinataResponse.data.cid); // Set the CID key
+                setNextStep(true);
+                console.log("File uploaded to Pinata:", pinataResponse.data.cid);
+            } else {
+                console.error("MetaMask is not installed.");
+            }
+        } catch (error) {
+            console.error("Error uploading to Pinata:", error);
         }
     };
 
     const handleSubmit = async () => {
         if (!dataQuality) {
-            console.error("Data quality is not set. Please check data quality before uploading.");
-            return;  // Exit if dataQuality is not set
+            console.error("Data quality not checked. Please check before uploading.");
+            return;
         }
 
         const currentDate = new Date().toISOString();
-        let userAddress = "";
-
-        if (window.ethereum) {
-            const web3 = new Web3(window.ethereum);
-            const accounts = await web3.eth.getAccounts();
-            if (accounts.length > 0) {
-                userAddress = accounts[0];
-            } else {
-                console.error("MetaMask address not found.");
-            }
-        }
-
-        // Log each form field to verify data before uploading
-        console.log("File:", file);
-        console.log("Thumbnail:", thumbnail);
-        console.log("Description:", description);
-        console.log("Username:", "devak");
-        console.log("User Address:", userAddress);
-        console.log("Current Date:", currentDate);
-        console.log("Dataset Type:", datasetType);
-        console.log("Data Quality:", dataQuality); // Ensure dataQuality is set
-        console.log("ETH Price:", ethPrice);
 
         const formData = new FormData();
+        console.log("file"+file);
+        console.log("thumbnail"+thumbnail);
+        console.log("description"+description);
+        console.log("username"+username);
+        console.log("userAddress"+userAddress);
+        console.log("currentDate"+currentDate);
+        console.log("dataQuality"+ dataQuality);
+        console.log("cidcode"+ cidcode);
+        console.log("ethPrice"+ ethPrice);
         formData.append("file", file);
         formData.append("thumbnail", thumbnail);
         formData.append("description", description);
-        formData.append("username", "devak");
+        formData.append("username", username);
         formData.append("userAddress", userAddress);
         formData.append("currentDate", currentDate);
-        formData.append("datasetType", datasetType);
-        formData.append("dataQuality", dataQuality); // Include dataQuality here
+        formData.append("dataQuality", dataQuality);
+        formData.append("cidcode", cidcode); // Include the CID code
         formData.append("ethPrice", ethPrice);
+        console.log(formData)
 
         try {
             const response = await axios.post("http://localhost:9000/api/upload-dataset", formData, {
@@ -108,150 +103,101 @@ export function UploadData() {
         }
     };
 
-    const handleNext = async () => {
-        try {
-            const currentDate = new Date().toISOString();
-            if (window.ethereum) {
-                const web3 = new Web3(window.ethereum);
-                await window.ethereum.request({ method: "eth_requestAccounts" });
-                const userAddress = await web3.eth.getAccounts();
-                if (userAddress && userAddress.length > 0) {
-                    const address = userAddress[0];
-                    const formData = new FormData();
-                    formData.append("file", file);
-                    formData.append("userAddress", address);
-                    formData.append("currentDate", currentDate);
-                    formData.append("datasetType", datasetType);
-
-                    // Call your backend to get the hash code and upload to Pinata
-                    const hashResponse = await axios.post("http://localhost:9000/api/get-hash-code", formData, {
-                        headers: { 'Content-Type': 'multipart/form-data' },
-                    });
-                    console.log("Hash response:", hashResponse.data);
-
-                    // After getting the hash code, upload the file to Pinata
-                    const pinataFormData = new FormData();
-                    pinataFormData.append("file", file);
-                    pinataFormData.append("hashCode", hashResponse.data.hashCode);
-                    
-                    // Upload to Pinata API
-                    const pinataResponse = await axios.post("http://localhost:9000/api/upload-to-pinata", pinataFormData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    });
-
-                    console.log("File uploaded to Pinata:", pinataResponse.data);
-                    setQualityChecked(true);
-                    setNextStep(true);
-                }
-            } else {
-                console.error("MetaMask is not installed.");
-            }
-        } catch (error) {
-            console.error("Error fetching data quality:", error);
-        }
-    };
-
     return (
-        <div className="flex justify-center items-center w-full min-h-screen">
-            <div className="flex flex-col items-center p-10 rounded-lg w-full max-w-xl">
-                <h2 className="text-4xl font-semibold mb-8">Upload Dataset</h2>
+        <div className="flex justify-center items-center w-full min-h-screen bg-gray-100">
+            <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-2xl">
+                <h2 className="text-4xl font-bold text-gray-800 mb-6 text-center">Upload Dataset</h2>
 
-                <div className="w-full space-y-6">
-                    {/* File Upload */}
+                <div className="space-y-8">
                     <div>
-                        <label className="block font-medium mb-2">CSV File</label>
+                        <label className="block text-lg font-semibold text-gray-600 mb-2">CSV File</label>
                         <input
                             type="file"
                             accept=".csv"
                             onChange={handleFileChange}
-                            className={`w-full p-3 border ${fileUploaded ? 'border-green-500' : 'border-gray-600'} rounded-lg focus:outline-none focus:border-gray-500 transition`}
+                            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                         />
                         {!nextStep && (
                             <button
                                 onClick={handleQualityCheck}
                                 disabled={!file}
-                                className="mt-3 bg-gray-700 text-white px-4 py-2 rounded-sm flex items-center gap-2 hover:bg-gray-600 transition cursor-pointer"
+                                className="mt-4 bg-slate-800 text-white px-4 py-2 rounded-md shadow hover:bg-slate-600 flex items-center gap-2 transition cursor-pointer"
                             >
                                 <FaCloudUploadAlt /> Check Quality
                             </button>
                         )}
                     </div>
 
-                    {/* Data Quality Display */}
                     {qualityChecked && dataQuality && (
-                        <div className="flex flex-col p-4 rounded-lg shadow-inner mb-4">
-                            <div className="mb-2">
-                                <strong>Data Quality:</strong> {dataQuality}
-                            </div>
+                        <div className="bg-blue-50 p-4 rounded-lg shadow-inner mb-4">
+                            <div className="text-lg text-blue-700"><strong>Data Quality:</strong> {dataQuality}</div>
                             {!nextStep && (
-                                <div>
-                                    <h6>If you're happy with the score, click next to proceed</h6>
-                                    <button onClick={handleNext} className="mt-2 px-4 py-2 bg-slate-800 hover:bg-slate-600 text-white rounded-md">
-                                        Next
-                                    </button>
-                                </div>
+                                <button onClick={handleNext} className="mt-3 bg-slate-800 text-white px-4 py-2 rounded-md shadow hover:bg-slate-600">
+                                    Next
+                                </button>
                             )}
                         </div>
                     )}
 
-                    {/* Additional Details (shown only after quality check and next step) */}
                     {nextStep && (
-                        <>
+                        <div className="space-y-6">
                             <div>
-                                <label className="block font-medium mb-2">Dataset Title</label>
+                                <label className="block text-lg font-semibold text-gray-600">Username</label>
                                 <input
                                     type="text"
-                                    value={datasetType}
-                                    onChange={(e) => setDatasetType(e.target.value)}
-                                    placeholder="Enter dataset type"
-                                    className="w-full p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-gray-500 transition"
+                                    placeholder="Username"
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="mt-2 p-3 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                                 />
                             </div>
 
                             <div>
-                                <label className="block font-medium mb-2">Description</label>
-                                <textarea
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    placeholder="Enter a short description"
-                                    className="w-full p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-gray-500 transition"
-                                    rows="3"
-                                ></textarea>
+                                <label className="block text-lg font-semibold text-gray-600">Dataset Title</label>
+                                <input
+                                    type="text"
+                                    placeholder="Dataset Title"
+                                    onChange={(e) => setDatasetType(e.target.value)}
+                                    className="mt-2 p-3 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
+                                />
                             </div>
 
                             <div>
-                                <label className="block font-medium mb-2">Thumbnail Image <span className="text-sm text-slate-500">less than 20kb</span></label>
+                                <label className="block text-lg font-semibold text-gray-600">Description</label>
+                                <textarea
+                                    placeholder="Dataset Description"
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="mt-2 p-3 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-lg font-semibold text-gray-600 flex items-center gap-2">
+                                    <FaEthereum /> Gwei ETH
+                                </label>
+                                <input
+                                    type="number"
+                                    placeholder="Gwei ETH"
+                                    onChange={(e) => setEthPrice(e.target.value)}
+                                    className="mt-2 p-3 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-lg font-semibold text-gray-600">Thumbnail Image <span className="text-sm text-gray-500">(less than 20kb)</span></label>
                                 <input
                                     type="file"
-                                    accept="image/jpg"
-                                    onChange={handleThumbnailChange}
-                                    className={`w-full p-3 border ${thumbnailUploaded ? 'border-green-500' : 'border-gray-600'} rounded-lg focus:outline-none focus:border-gray-500 transition`}
+                                    onChange={(e) => setThumbnail(e.target.files[0])}
+                                    className="mt-2 p-3 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                                 />
                             </div>
 
-                            {/* ETH Price */}
-                            <div>
-                                <label className="block font-medium mb-2">ETH Price</label>
-                                <input
-                                    type="text"
-                                    value={ethPrice}
-                                    onChange={(e) => setEthPrice(e.target.value)}
-                                    placeholder="Enter ETH price"
-                                    className="w-full p-3 border border-gray-600 rounded-lg focus:outline-none focus:border-gray-500 transition"
-                                />
-                            </div>
-
-                            {/* Submit Button */}
                             <button
                                 onClick={handleSubmit}
-                                disabled={!file || !description || !dataQuality || !ethPrice}
-                                className="mt-5 px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg disabled:bg-gray-500 transition"
+                                className="w-full mt-4 bg-slate-800 text-white px-4 py-3 rounded-md shadow hover:bg-slate-600 transition"
                             >
-                                Upload Dataset
+                                Submit
                             </button>
-                        </>
+                        </div>
                     )}
                 </div>
             </div>
