@@ -1,17 +1,11 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
-const { Web3Storage, File } = require('web3.storage');
 const axios = require('axios');
-const dotenv = require('dotenv');
-
-// Load environment variables from .env file
-dotenv.config();
-
+const FormData = require('form-data'); // Correct import
+const { spawn } = require('child_process'); // Make sure to import spawn for Python script execution
 const app = express();
 const PORT = 9000;
 
@@ -36,10 +30,7 @@ const upload = multer({
     }
 });
 
-// Initialize Web3Storage client with API key
-const client = new Web3Storage({ token: process.env.WEB3_STORAGE_API_KEY });
-
-// Endpoint to receive file and respond with quality
+// Data Quality Check endpoint (calls Python script for analysis)
 app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
     try {
         if (!req.file) {
@@ -49,7 +40,7 @@ app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
         const filePath = path.join(uploadDir, req.file.filename);
 
         // Spawn Python process to calculate quality
-        const pythonProcess = spawn('python3', ['calculate_quality.py', filePath]);
+        const pythonProcess = spawn(process.env.PYTHON_PATH || 'python', ['calculate_quality.py', filePath]);
 
         let result = '';
         pythonProcess.stdout.on('data', (data) => {
@@ -61,7 +52,7 @@ app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
                 try {
                     const response = JSON.parse(result);
                     res.json(response);
-                    fs.unlinkSync(filePath);
+                    fs.unlinkSync(filePath); // Cleanup after processing
                 } catch (err) {
                     res.status(500).json({ error: 'Error parsing JSON from Python' });
                     console.error("Error parsing JSON from Python:", err);
@@ -81,141 +72,51 @@ app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
     }
 });
 
-// Endpoint to get hash code of uploaded CSV file
-app.post('/api/get-hash-code', upload.single('file'), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        const filePath = path.join(uploadDir, req.file.filename);
-
-        const fileStream = fs.createReadStream(filePath);
-        const hash = crypto.createHash('sha256');
-
-        fileStream.on('data', (chunk) => {
-            hash.update(chunk);
-        });
-
-        fileStream.on('end', () => {
-            const hashCode = hash.digest('hex');
-            res.json({ hashCode });
-            fs.unlinkSync(filePath);
-        });
-
-        fileStream.on('error', (err) => {
-            console.error('Error reading file:', err);
-            res.status(500).json({ error: 'Error reading file' });
-        });
-
-    } catch (error) {
-        console.error('Error processing file:', error);
-        res.status(500).json({ error: 'Error processing file' });
+// Endpoint to upload file to Pinata
+app.post('/api/upload-to-pinata', upload.single('file'), (req, res) => {
+    const file = req.file;
+  
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
     }
-});
-
-// Endpoint to upload CSV file to Web3.Storage and retrieve CID
-app.post('/api/upload-to-ipfs', upload.single('file'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        const filePath = path.join(uploadDir, req.file.filename);
-        const file = new File([fs.readFileSync(filePath)], req.file.originalname);
-
-        // Upload the file to Web3.Storage and get the CID
-        const cid = await client.put([file]);
-
-        // Send the CID back in the response
-        res.json({ cid });
-
-        // Optionally, delete the file from the server after uploading to Web3.Storage
-        fs.unlinkSync(filePath);
-
-    } catch (error) {
-        console.error('Error uploading to Web3.Storage:', error);
-        res.status(500).json({ error: 'Error uploading file to Web3.Storage' });
-    }
-});
-
-// Endpoint to upload file to Pinata and get CID
-app.post('/api/upload-to-pinata', upload.single('file'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        const filePath = path.join(uploadDir, req.file.filename);
-        const fileStream = fs.createReadStream(filePath);
-
-        const formData = new FormData();
-        formData.append('file', fileStream);
-
-        const pinataResponse = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
-            maxBodyLength: 'Infinity', // Allow large files
-            headers: {
-                'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
-                'pinata_api_key': process.env.PINATA_API_KEY,
-                'pinata_secret_api_key': process.env.PINATA_API_SECRET,
-            },
+  
+    // Prepare FormData for Pinata
+    const form = new FormData();
+    form.append('file', fs.createReadStream(file.path));
+  
+    // Headers for Pinata request
+    const headers = {
+      ...form.getHeaders(),
+      pinata_api_key: "e414f68867a6d6731055",
+      pinata_secret_api_key: "e2f8c6fdb791e18c081da9a4fb73ebfdfef3144e1bf54f7b5b4e5be94cdac9b6",
+    };
+  
+    // Make the API request to Pinata
+    axios
+      .post('https://api.pinata.cloud/pinning/pinFileToIPFS', form, {
+        headers: headers,
+      })
+      .then((response) => {
+        // Send back the IPFS CID from Pinata
+        res.status(200).json({
+          success: true,
+          message: 'File uploaded successfully',
+          cid: response.data.IpfsHash,  // Pinata's response contains the CID (hash)
         });
-
-        const { IpfsHash } = pinataResponse.data;
-
-        res.json({ cid: IpfsHash });
-
-        fs.unlinkSync(filePath);
-
-    } catch (error) {
+      })
+      .catch((error) => {
         console.error('Error uploading to Pinata:', error);
-        res.status(500).json({ error: 'Error uploading file to Pinata' });
-    }
-});
+        res.status(500).json({
+          error: 'Error uploading to Pinata',
+          details: error.response ? error.response.data : error.message,
+        });
+      })
+      .finally(() => {
+        fs.unlinkSync(file.path);  // Clean up the uploaded file after Pinata upload
+      });
+  });
 
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-});
-
-
-app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        const filePath = path.join(uploadDir, req.file.filename);
-
-        // Spawn Python process to calculate quality
-        const pythonProcess = spawn('python3', ['calculate_quality.py', filePath]);
-
-        let result = '';
-        pythonProcess.stdout.on('data', (data) => {
-            result += data.toString();
-        });
-
-        pythonProcess.on('close', (code) => {
-            if (code === 0) {
-                try {
-                    const response = JSON.parse(result);
-                    res.json(response);
-                    fs.unlinkSync(filePath);
-                } catch (err) {
-                    res.status(500).json({ error: 'Error parsing JSON from Python' });
-                    console.error("Error parsing JSON from Python:", err);
-                }
-            } else {
-                res.status(500).json({ error: 'Error calculating data quality' });
-            }
-        });
-
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`Python error: ${data}`);
-            res.status(500).json({ error: 'Error in Python script' });
-        });
-    } catch (error) {
-        console.error('Error processing file:', error);
-        res.status(500).json({ error: 'Error processing file' });
-    }
 });
