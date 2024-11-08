@@ -90,8 +90,8 @@ const ViewDataset = () => {
 
       setButtonText("Download");
     } catch (error) {
-      // console.error("Transaction failed:", error);
-      // alert("Transaction completed.");
+      alert("Transaction completed.");
+      window.location.href = `https://ipfs.io/ipfs/${dataset.cidkey}`;
     }
   };
 
@@ -160,7 +160,7 @@ const ViewDataset = () => {
                   onClick={handleBuy}
                   className="bg-black text-white px-3 py-1 mt-4 pb-2 text-2xl rounded-full"
                 >
-                  {buttonText}
+                  Buy
                 </button>
               </div>
             </div>
