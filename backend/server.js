@@ -70,16 +70,6 @@ app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
         console.error('Error processing file:', error);
         res.status(500).json({ error: 'Error processing file' });
     }
-
-    console.log(`File received: ${req.file.originalname}`);
-
-    // Perform any necessary processing on the file here (e.g., validation, parsing)
-    const qualityScore = 80; // Mocked quality score, replace with actual logic
-    res.json({ quality: qualityScore });
-  } catch (error) {
-    console.error("Error processing file:", error);
-    res.status(500).json({ error: "Error processing file" });
-  }
 });
 
 // Endpoint to upload file to Pinata
@@ -128,5 +118,5 @@ app.post('/api/upload-to-pinata', upload.single('file'), (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
