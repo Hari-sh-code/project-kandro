@@ -36,7 +36,7 @@ const Filter = () => {
       >
         High Quality
       </div>
-      <div
+      {/* <div
         onClick={() => handleFilter(3)}
         className={`${
           filter === 3
@@ -45,7 +45,7 @@ const Filter = () => {
         } filter`}
       >
         High Rating
-      </div>
+      </div> */}
     </div>
   );
 };

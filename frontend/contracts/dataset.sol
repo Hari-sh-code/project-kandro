@@ -13,7 +13,7 @@ contract DatasetStorage {
         string owner;
         string timestamp;
         string quality;  // Changed from uint256 to string
-        string rating;   // Changed from uint256 to string
+        string useraddress;   // Changed from uint256 to string
         string price;    // Changed from uint256 to string
         string description;
         string cidkey;   // Added cidkey to the struct
@@ -28,7 +28,7 @@ contract DatasetStorage {
         string owner,
         string timestamp,
         string quality,   // Changed from uint256 to string
-        string rating,    // Changed from uint256 to string
+        string useraddress,    // Changed from uint256 to string
         string price,     // Changed from uint256 to string
         string description,
         string cidkey     // Added cidkey in the event
@@ -40,9 +40,10 @@ contract DatasetStorage {
         string memory _owner,
         string memory _cidkey,  // New input for cidkey
         string memory _quality, // Quality now taken as string
-        string memory _rating,  // Rating now taken as string
+          // Rating now taken as string
         string memory _price,   // Price now taken as string
-        string memory _description
+        string memory _description,
+        string memory _useraddress,
     ) public {
         datasetCount++;
 
@@ -56,10 +57,11 @@ contract DatasetStorage {
             _owner,
             timestampString,
             _quality,
-            _rating,
+           
             _price,
             _description,
-            _cidkey
+            _cidkey,
+             _useraddress,
         );
 
         // Emit the event
@@ -69,7 +71,7 @@ contract DatasetStorage {
             _owner,
             timestampString,
             _quality,
-            _rating,
+            _useraddress,
             _price,
             _description,
             _cidkey
@@ -88,7 +90,7 @@ contract DatasetStorage {
         string memory _owner,
         string memory _timestamp,
         string memory _quality,
-        string memory _rating,
+        string memory _useraddress,
         string memory _price,
         string memory _description,
         string memory _cidkey
@@ -99,7 +101,7 @@ contract DatasetStorage {
             _owner,
             _timestamp,
             _quality,
-            _rating,
+            _useraddress,
             _price,
             _description,
             _cidkey
@@ -113,7 +115,7 @@ contract DatasetStorage {
         string memory _owner,
         string memory _timestamp,
         string memory _quality,
-        string memory _rating,
+        string memory _useraddress,
         string memory _price,
         string memory _description,
         string memory _cidkey
@@ -124,7 +126,7 @@ contract DatasetStorage {
             _owner,
             _timestamp,
             _quality,
-            _rating,
+            _useraddress,
             _price,
             _description,
             _cidkey
@@ -137,11 +139,11 @@ contract DatasetStorage {
         string memory name,
         string memory owner,
         string memory timestamp,
-        string memory quality,   // Return quality as string
-        string memory rating,    // Return rating as string
+        string memory quality,  
         string memory price,     // Return price as string
         string memory description,
-        string memory cidkey     // Return cidkey
+        string memory cidkey ,
+        string memory useraddress    // Return cidkey
     ) {
         Dataset memory dataset = datasets[_id];
         return (
@@ -150,7 +152,7 @@ contract DatasetStorage {
             dataset.owner,
             dataset.timestamp,
             dataset.quality,   // Return string quality
-            dataset.rating,    // Return string rating
+            dataset.useraddress,    // Return string rating
             dataset.price,     // Return string price
             dataset.description,
             dataset.cidkey // Return string cidkey

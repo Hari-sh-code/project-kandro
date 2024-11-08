@@ -3,12 +3,12 @@ import Web3 from "web3";
 import DatasetStorageABI from "./DatasetStorageABI";
 
 const web3 = new Web3(window.ethereum); // Connect to Ethereum using MetaMask
-const contractAddress = "0xb352aa5ea65e135a1152268794610b23c81dac2b"; // Replace with your contract's address
+const contractAddress = "0xdb5d4666eb909f539f23ab752a53f85b7fd54d53"; // Replace with your contract's address
 
 const DataContext = createContext({});
 
 export const DataProvider = ({ children }) => {
-  const [filter, setFilter] = useState(0);
+  const [filter, setFilter] = useState(0); // 0: All, 1: Last 2 Days, 2: Highly Rated, 3: High Quality
   const [searchVal, setSearchVal] = useState("");
   const [datasets, setDatasets] = useState([]);
   const [filteredDatasets, setFilteredDatasets] = useState([]);
@@ -52,9 +52,10 @@ export const DataProvider = ({ children }) => {
             id: dataset.id.toString(), // Convert BigNumber to string
             name: dataset.name,
             owner: dataset.owner,
-            timestamp: dateOnly, // Only include the date part
+            timestamp: timestampInIST, // Store the full timestamp to sort later
+            timestampString: dateOnly, // Only include the date part
             quality: dataset.quality.toString(),
-            rating: parseFloat(dataset.rating.toString()), // Make sure rating is a number
+            useraddress: dataset.useraddress, // Make sure rating is a number
             price: parseFloat(dataset.price.toString()), // Make sure price is a number
             coverImg: dataset.coverImg,
             description: dataset.description,
@@ -62,6 +63,7 @@ export const DataProvider = ({ children }) => {
           });
         }
         setDatasets(loadedDatasets);
+        console.log(loadedDatasets);
       } catch (error) {
         console.error("Error fetching data from the blockchain:", error);
       } finally {
@@ -76,7 +78,7 @@ export const DataProvider = ({ children }) => {
     const applyFilter = () => {
       let result = [...datasets];
 
-      // Apply filter conditions
+      // Apply filter conditions based on the selected filter
       if (filter === 1) {
         const twoDaysAgo = new Date();
         twoDaysAgo.setHours(twoDaysAgo.getHours() - 48);
@@ -85,11 +87,12 @@ export const DataProvider = ({ children }) => {
         );
       }
 
-      // Apply sorting conditions
+      // Sort datasets by timestamp, keep the newly uploaded first
+      result.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
       if (filter === 2) {
-        result = result.sort((a, b) => b.rating - a.rating); // Sort by rating
-      } else if (filter === 3) {
-        result = result.sort((a, b) => b.price - a.price); // Sort by price
+        // Sort remaining datasets by quality in descending order
+        result = result.sort((a, b) => b.quality - a.quality);
       }
 
       // Apply search filter

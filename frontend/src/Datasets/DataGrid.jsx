@@ -55,9 +55,9 @@ const DataGrid = () => {
                     src={img1}
                     alt=""
                   />
-                  <div className="absolute top-0 font-semibold right-0 flex items-center gap-1 text-xl p-2 bg-white text-black border-t border-r rounded-bl-lg rounded-tr-lg">
+                  {/* <div className="absolute top-0 font-semibold right-0 flex items-center gap-1 text-xl p-2 bg-white text-black border-t border-r rounded-bl-lg rounded-tr-lg">
                     {data.rating} <IoMdStar className="h-6 w-6" />
-                  </div>
+                  </div> */}
 
                   {isNewDataset(data.timestamp) && (
                     <div className="absolute top-0 left-0 flex items-center justify-center text-xl p-2 bg-black font-bold text-white rounded-br-lg">

@@ -1,17 +1,17 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import img1 from "../assets/iconify.png";
 import { useParams, useNavigate } from "react-router-dom";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
 import DataContext from "../Context/DataContext";
 import { FaEthereum } from "react-icons/fa";
-import { IoMdStar } from "react-icons/io";
+import Web3 from "web3";
+import BN from "bn.js"; // Import BN.js for BigNumber operations
 
 // Helper function to get today's date in IST (Indian Standard Time)
 const getTodayInIST = () => {
   const today = new Date(); // Get current date
   const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC + 5 hours 30 minutes (in milliseconds)
   const istDate = new Date(today.getTime() + istOffset); // Apply IST offset
-
   return istDate;
 };
 
@@ -19,6 +19,7 @@ const ViewDataset = () => {
   const { datasets } = useContext(DataContext);
   const { id } = useParams();
   const navigate = useNavigate();
+  const [buttonText, setButtonText] = useState("Buy");
 
   const dataset = datasets.find((data) => data.id === id);
 
@@ -42,6 +43,57 @@ const ViewDataset = () => {
   const formattedTimestamp = timestampInIST.toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
   });
+
+  const handleBuy = async () => {
+    if (!window.ethereum) {
+      alert("MetaMask is not installed!");
+      return;
+    }
+
+    const web3 = new Web3(window.ethereum);
+    const contractAddress = "0x01e238648c0bcFCD9aD02041eF593d7E187207eD";
+    const buyerAddress = (await web3.eth.getAccounts())[0];
+
+    // Convert dataset price from Gwei to Wei (BigNumber handling)
+    const totalAmount = web3.utils.toWei(dataset.price.toString(), "gwei");
+
+    // Use BN from bn.js to handle BigNumber operations
+    const contractShare = new BN(totalAmount).mul(new BN(10)).div(new BN(100)); // 10% of total amount
+    const ownerShare = new BN(totalAmount).sub(contractShare); // Remaining 90% for the owner
+
+    try {
+      // Estimate gas required for the contract transaction
+      const gasEstimate = await web3.eth.estimateGas({
+        from: buyerAddress,
+        to: contractAddress,
+        value: contractShare.toString(),
+      });
+
+      console.log(
+        `Gas estimate for contract share transaction: ${gasEstimate}`
+      );
+
+      // Send 10% to contract and 90% to dataset owner with increased gas limit
+      await web3.eth.sendTransaction({
+        from: buyerAddress,
+        to: contractAddress,
+        value: contractShare.toString(), // Convert BN to string
+        gas: gasEstimate > 21000 ? gasEstimate : 53000, // Use estimated gas or fallback to 53000
+      });
+
+      await web3.eth.sendTransaction({
+        from: buyerAddress,
+        to: dataset.userAddress,
+        value: ownerShare.toString(), // Convert BN to string
+        gas: gasEstimate > 21000 ? gasEstimate : 53000, // Use estimated gas or fallback to 53000
+      });
+
+      setButtonText("Download");
+    } catch (error) {
+      // console.error("Transaction failed:", error);
+      // alert("Transaction completed.");
+    }
+  };
 
   return (
     <div className="bg-gray-50 p-8 basis-full">
@@ -94,11 +146,7 @@ const ViewDataset = () => {
                   <p className="text-lg mt-3">Quality: {dataset.quality}%</p>
                 </div>
                 <div>
-                  <p className="text-lg flex items-center">
-                    <IoMdStar className="h-6 w-6 " />
-                    {dataset.rating}
-                  </p>
-                  <h3 className="text-2xl mt-3 font-semibold flex items-center justify-center">
+                  <h3 className="text-2xl font-semibold flex items-center justify-center">
                     <FaEthereum />
                     {`${dataset.price} Gwei ETH`}
                   </h3>
@@ -108,8 +156,11 @@ const ViewDataset = () => {
                 <p className="text-lg">
                   <strong>Uploaded on:</strong> {formattedTimestamp.slice(0, 9)}
                 </p>
-                <button className="bg-black text-white px-3 py-1 mt-4 pb-2 text-2xl rounded-full">
-                  Buy
+                <button
+                  onClick={handleBuy}
+                  className="bg-black text-white px-3 py-1 mt-4 pb-2 text-2xl rounded-full"
+                >
+                  {buttonText}
                 </button>
               </div>
             </div>

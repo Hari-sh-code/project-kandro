@@ -69,13 +69,9 @@ const ContactIcon = () => (
 );
 
 const NavBar = () => {
-  const [nav, setNav] = useState(() => {
-    const localNav = localStorage.getItem("localNav");
-    return localNav ? JSON.parse(localNav) : 0;
-  });
+  const [nav, setNav] = useState(0);
   const handleNav = (val) => {
     setNav(val);
-    localStorage.setItem("localNav", JSON.stringify(val));
   };
 
   return (

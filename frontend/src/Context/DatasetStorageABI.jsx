@@ -1,5 +1,48 @@
 const DatasetStorageABI = [
   {
+    inputs: [
+      {
+        internalType: "string",
+        name: "_name",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_owner",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_cidkey",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_quality",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_price",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_description",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_useraddress",
+        type: "string",
+      },
+    ],
+    name: "addDataset",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -35,7 +78,7 @@ const DatasetStorageABI = [
       {
         indexed: false,
         internalType: "string",
-        name: "rating",
+        name: "useraddress",
         type: "string",
       },
       {
@@ -59,49 +102,6 @@ const DatasetStorageABI = [
     ],
     name: "DatasetAdded",
     type: "event",
-  },
-  {
-    inputs: [
-      {
-        internalType: "string",
-        name: "_name",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_owner",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_cidkey",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_quality",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_rating",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_price",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_description",
-        type: "string",
-      },
-    ],
-    name: "addDataset",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
   },
   {
     inputs: [],
@@ -153,7 +153,7 @@ const DatasetStorageABI = [
       },
       {
         internalType: "string",
-        name: "rating",
+        name: "useraddress",
         type: "string",
       },
       {
@@ -212,11 +212,6 @@ const DatasetStorageABI = [
       },
       {
         internalType: "string",
-        name: "rating",
-        type: "string",
-      },
-      {
-        internalType: "string",
         name: "price",
         type: "string",
       },
@@ -228,6 +223,11 @@ const DatasetStorageABI = [
       {
         internalType: "string",
         name: "cidkey",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "useraddress",
         type: "string",
       },
     ],
