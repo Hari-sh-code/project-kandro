@@ -3,12 +3,17 @@ import joblib
 import numpy as np
 import json
 import sys
+from sklearn.ensemble import IsolationForest
+from pyod.models.knn import KNN
+from sklearn.preprocessing import StandardScaler
 
+# Define the required features for quality evaluation
 required_features = [
     'missing_values', 'duplicate_rows', 'unique_values', 'mixed_data_types', 
     'valid_range_values', 'outliers', 'class_balance', 'data_type_consistency'
 ]
 
+# Step 3: Calculate dataset quality metrics
 def calculate_quality_metrics(df):
     quality_metrics = {}
 
@@ -56,21 +61,12 @@ def calculate_quality_metrics(df):
 
     quality_metrics['data_type_consistency'] = df.apply(data_type_consistency).mean()
 
-    # Correlation with target variable (if target column exists)
-    if 'target' in df.columns and df['target'].dtype in [np.int64, np.float64]:
-        correlations = df.corr()['target'].drop('target')
-        quality_metrics['correlation_with_target'] = correlations.abs().mean() * 100
-
-    # Cardinality of categorical columns
-    categorical_columns = df.select_dtypes(include=['object']).columns
-    if len(categorical_columns) > 0:
-        quality_metrics['categorical_cardinality'] = df[categorical_columns].nunique().mean() * 100
-
     # Ensure we have exactly the required features
     quality_metrics = {key: quality_metrics.get(key, 0) for key in required_features}
 
     return quality_metrics
 
+# Load pre-trained model
 def load_model(filename='dataset_quality_model_xgb.pkl'):
     """Load the pre-trained model."""
     try:
@@ -79,6 +75,7 @@ def load_model(filename='dataset_quality_model_xgb.pkl'):
         print(f"Error: The model file {filename} was not found.")
         return None
 
+# Predict the quality score
 def predict_quality_score(model, df):
     """Predict the quality score."""
     metrics = calculate_quality_metrics(df)
@@ -86,39 +83,73 @@ def predict_quality_score(model, df):
     quality_score = model.predict([feature_vector])
     return quality_score[0]
 
+# Malicious Data and Fake Dataset Detection
+def detect_anomalies_and_fake_data(df):
+    # Select only numeric columns for scaling
+    numeric_columns = df.select_dtypes(include=[np.number]).columns
+
+    # If there are no numeric columns, raise an exception
+    if numeric_columns.empty:
+        raise ValueError("The dataset must contain numeric columns for scaling.")
+
+    # Scaling the numeric data for better performance in anomaly detection
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(df[numeric_columns])
+
+    # Apply Isolation Forest for malicious detection (Anomaly Detection)
+    isolation_forest = IsolationForest(contamination=0.05)
+    isolation_forest.fit(scaled_data)
+    predictions_if = isolation_forest.predict(scaled_data)
+
+    # Apply KNN for fake dataset detection (Outlier detection)
+    clf_knn = KNN()
+    clf_knn.fit(scaled_data)
+    predictions_knn = clf_knn.predict(scaled_data)
+
+    # Check if there are any outliers or anomalies
+    malicious_found = np.any(predictions_if == -1)  # True if any anomaly is detected
+
+    # Fake dataset detection (checking for duplicates)
+    duplicates = df.duplicated().any()  # True if any duplicate is found
+
+    return malicious_found, duplicates
+
+# Evaluate quality score for the uploaded dataset file
 def evaluate_quality_score(file_path):
     """Load dataset, make prediction, and return quality score."""
     try:
         df = pd.read_csv(file_path)
     except FileNotFoundError:
-        return None
+        return {'status': 'error', 'message': 'Dataset file not found.'}
 
     model = load_model()
     if model is None:
-        return None
+        return {'status': 'error', 'message': 'Model not found.'}
 
+    # Step 3: Detect anomalies (malicious) and fake data
+    malicious_found, fake_data_found = detect_anomalies_and_fake_data(df)
+
+    # Step 4: Predict the quality score
     quality_score = predict_quality_score(model, df)
-    return quality_score
+
+    # Combine results
+    result = {
+        'status': 'success',
+        'quality_score': round(float(quality_score), 2),
+        'malicious_data_found': bool(malicious_found),  # Convert to standard Python bool
+        'fake_data_found': bool(fake_data_found)        # Convert to standard Python bool
+    }
+
+    return result
 
 # Main function to be executed when called from Node.js
 def main():
     # Get the file path passed from Node.js (frontend)
     file_path = sys.argv[1]  # Read file path from command line arguments
-    quality_score = evaluate_quality_score(file_path)
-    
-    if quality_score is not None:
-        result = {
-            'status': 'success',
-            'quality_score': round(float(quality_score), 2)  # Ensure it's a native float
-        }
-    else:
-        result = {
-            'status': 'error',
-            'message': 'Could not calculate quality score.'
-        }
+    result = evaluate_quality_score(file_path)
 
-    # Print the result as JSON so Node.js can capture it
-    print(json.dumps(result))
+    # Return the result as JSON
+    print(json.dumps(result, indent=4))
 
 if __name__ == "__main__":
     main()

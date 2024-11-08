@@ -4,8 +4,8 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const FormData = require('form-data'); // Correct import
-const { spawn } = require('child_process'); // Make sure to import spawn for Python script execution
+const FormData = require('form-data');
+const { spawn } = require('child_process');
 const app = express();
 const PORT = 9000;
 
@@ -48,73 +48,84 @@ app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
         });
 
         pythonProcess.on('close', (code) => {
+            console.log('Python script exited with code:', code); // Log the exit code
             if (code === 0) {
                 try {
-                    const response = JSON.parse(result);
-                    res.json(response);
-                    fs.unlinkSync(filePath); // Cleanup after processing
+                    const response = JSON.parse(result); // Parse the Python script output (JSON)
+                    if (response.status === 'success') {
+                        res.json(response); // Send back the quality score result
+                    } else {
+                        res.status(500).json({ error: 'Error from Python script', message: response.message });
+                    }
+                    fs.unlinkSync(filePath); // Cleanup the uploaded file after processing
                 } catch (err) {
-                    res.status(500).json({ error: 'Error parsing JSON from Python' });
-                    console.error("Error parsing JSON from Python:", err);
+                    console.error('Error parsing JSON from Python:', err); // Log error parsing
+                    res.status(500).json({ error: 'Error parsing JSON from Python', details: err.message });
                 }
             } else {
-                res.status(500).json({ error: 'Error calculating data quality' });
+                console.error('Python script failed with code:', code); // Log the failure code
+                res.status(500).json({ error: 'Error calculating data quality', code });
             }
         });
 
         pythonProcess.stderr.on('data', (data) => {
-            console.error(`Python error: ${data}`);
-            res.status(500).json({ error: 'Error in Python script' });
+            console.error(`Python error: ${data}`); // Log any Python error messages
+            res.status(500).json({ error: 'Error in Python script', details: data.toString() });
         });
     } catch (error) {
-        console.error('Error processing file:', error);
-        res.status(500).json({ error: 'Error processing file' });
+        console.error('Error processing file:', error); // Log the general error
+        res.status(500).json({ error: 'Error processing file', details: error.message });
     }
 });
 
-// Endpoint to upload file to Pinata
+// Endpoint to upload file to Pinata (if needed)
 app.post('/api/upload-to-pinata', upload.single('file'), (req, res) => {
     const file = req.file;
-  
+
     if (!file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+        return res.status(400).json({ error: 'No file uploaded' });
     }
-  
+
     // Prepare FormData for Pinata
     const form = new FormData();
     form.append('file', fs.createReadStream(file.path));
-  
-    // Headers for Pinata request
+
+    // Headers for Pinata request (use environment variables for API keys)
     const headers = {
-      ...form.getHeaders(),
-      pinata_api_key: "e414f68867a6d6731055",
-      pinata_secret_api_key: "e2f8c6fdb791e18c081da9a4fb73ebfdfef3144e1bf54f7b5b4e5be94cdac9b6",
+        ...form.getHeaders(),
+        pinata_api_key: process.env.PINATA_API_KEY,  // Use environment variables
+        pinata_secret_api_key: process.env.PINATA_SECRET_API_KEY, // Use environment variables
     };
-  
+
     // Make the API request to Pinata
     axios
-      .post('https://api.pinata.cloud/pinning/pinFileToIPFS', form, {
-        headers: headers,
-      })
-      .then((response) => {
-        // Send back the IPFS CID from Pinata
-        res.status(200).json({
-          success: true,
-          message: 'File uploaded successfully',
-          cid: response.data.IpfsHash,  // Pinata's response contains the CID (hash)
+        .post('https://api.pinata.cloud/pinning/pinFileToIPFS', form, {
+            headers: headers,
+        })
+        .then((response) => {
+            // Send back the IPFS CID from Pinata
+            res.status(200).json({
+                success: true,
+                message: 'File uploaded successfully',
+                cid: response.data.IpfsHash,  // Pinata's response contains the CID (hash)
+            });
+        })
+        .catch((error) => {
+            console.error('Error uploading to Pinata:', error);
+            res.status(500).json({
+                error: 'Error uploading to Pinata',
+                details: error.response ? error.response.data : error.message,
+            });
+        })
+        .finally(() => {
+            // Cleanup uploaded file after Pinata upload
+            try {
+                fs.unlinkSync(file.path);
+            } catch (err) {
+                console.error("Error deleting file after upload:", err);
+            }
         });
-      })
-      .catch((error) => {
-        console.error('Error uploading to Pinata:', error);
-        res.status(500).json({
-          error: 'Error uploading to Pinata',
-          details: error.response ? error.response.data : error.message,
-        });
-      })
-      .finally(() => {
-        fs.unlinkSync(file.path);  // Clean up the uploaded file after Pinata upload
-      });
-  });
+});
 
 // Start the server
 app.listen(PORT, () => {
