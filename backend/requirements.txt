@@ -3,3 +3,6 @@ numpy
 joblib
 xgboost
 scikit-learn
+pyclamd
+tika
+pyod
