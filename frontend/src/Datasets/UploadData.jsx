@@ -2,19 +2,22 @@ import React, { useState } from "react";
 import { FaCloudUploadAlt, FaEthereum } from "react-icons/fa";
 import axios from 'axios';
 import Web3 from "web3";
+import { MdReportProblem } from "react-icons/md";
 
 export function UploadData() {
     const [file, setFile] = useState(null);
     const [thumbnail, setThumbnail] = useState(null);
     const [description, setDescription] = useState("");
     const [datasetType, setDatasetType] = useState("");
-    const [username, setUsername] = useStat  e("");
+    const [username, setUsername] = useState("");
     const [ethPrice, setEthPrice] = useState("");
+    const [form,setform] =useState(false);
     const [dataQuality, setDataQuality] = useState(null);
     const [userAddress, setUserAddress] = useState("");
-    const [cidcode, setCidcode] = useState("");
+    const [cidcode, setCidcode] = useState(""); 
     const [qualityChecked, setQualityChecked] = useState(false);
     const [nextStep, setNextStep] = useState(false);
+    const [qualityWarning, setQualityWarning] = useState("");
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -30,8 +33,17 @@ export function UploadData() {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
                 const qualityData = response.data;
-                setDataQuality(qualityData.quality_score); 
+                setDataQuality(qualityData.quality_score);
                 setQualityChecked(true);
+
+                // Check for malicious and fake data indicators
+                if (qualityData.malicious_data_found || qualityData.fake_data_found) {
+                    setQualityWarning("Warning: The data contains malicious or fake entries and cannot be uploaded.");
+                    setNextStep(false); // Hide the "Next" button
+                } else {
+                    setQualityWarning(""); // Clear any warnings
+                    setNextStep(true); // Show the "Next" button
+                }
             } catch (error) {
                 console.error("Error fetching data quality:", error);
             }
@@ -53,8 +65,9 @@ export function UploadData() {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
 
-                setCidcode(pinataResponse.data.cid); // Set the CID key
-                setNextStep(true);
+                setCidcode(pinataResponse.data.cid);
+                setNextStep(false) // Set the CID key
+                setform(true)
                 console.log("File uploaded to Pinata:", pinataResponse.data.cid);
             } else {
                 console.error("MetaMask is not installed.");
@@ -73,15 +86,6 @@ export function UploadData() {
         const currentDate = new Date().toISOString();
 
         const formData = new FormData();
-        console.log("file"+file);
-        console.log("thumbnail"+thumbnail);
-        console.log("description"+description);
-        console.log("username"+username);
-        console.log("userAddress"+userAddress);
-        console.log("currentDate"+currentDate);
-        console.log("dataQuality"+ dataQuality);
-        console.log("cidcode"+ cidcode);
-        console.log("ethPrice"+ ethPrice);
         formData.append("file", file);
         formData.append("thumbnail", thumbnail);
         formData.append("description", description);
@@ -91,7 +95,6 @@ export function UploadData() {
         formData.append("dataQuality", dataQuality);
         formData.append("cidcode", cidcode); // Include the CID code
         formData.append("ethPrice", ethPrice);
-        console.log(formData)
 
         try {
             const response = await axios.post("http://localhost:9000/api/upload-dataset", formData, {
@@ -128,10 +131,16 @@ export function UploadData() {
                         )}
                     </div>
 
-                    {qualityChecked && dataQuality && (
+                    {qualityChecked && (
                         <div className="bg-blue-50 p-4 rounded-lg shadow-inner mb-4">
-                            <div className="text-lg text-blue-700"><strong>Data Quality:</strong> {dataQuality}</div>
-                            {!nextStep && (
+                            <div className="text-lg text-blue-700"><strong>Data Quality Score:</strong> {dataQuality}</div>
+                            {qualityWarning && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <MdReportProblem className="text-3xl text-red-700" />
+                                    <span className="text-red-600 font-semibold">{qualityWarning}</span>
+                                </div>
+                            )}
+                            {!qualityWarning && nextStep && (
                                 <button onClick={handleNext} className="mt-3 bg-slate-800 text-white px-4 py-2 rounded-md shadow hover:bg-slate-600">
                                     Next
                                 </button>
@@ -139,7 +148,7 @@ export function UploadData() {
                         </div>
                     )}
 
-                    {nextStep && (
+                    {form && (
                         <div className="space-y-6">
                             <div>
                                 <label className="block text-lg font-semibold text-gray-600">Username</label>
