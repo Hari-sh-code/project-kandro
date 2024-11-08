@@ -8,7 +8,7 @@ export function UploadData() {
     const [thumbnail, setThumbnail] = useState(null);
     const [description, setDescription] = useState("");
     const [datasetType, setDatasetType] = useState("");
-    const [username, setUsername] = useState("");
+    const [username, setUsername] = useStat  e("");
     const [ethPrice, setEthPrice] = useState("");
     const [dataQuality, setDataQuality] = useState(null);
     const [userAddress, setUserAddress] = useState("");
