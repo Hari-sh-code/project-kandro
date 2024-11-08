@@ -8,10 +8,94 @@ const FormData = require('form-data');
 const { spawn } = require('child_process');
 const app = express();
 const PORT = 9000;
+const mongoose = require("mongoose");
+
+const bodyParser = require("body-parser");
+app.use(express.json());
 
 // Enable CORS for all routes
 app.use(cors());
-
+mongoose.connect("mongodb://localhost:27017/discussionDB", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  
+  const db = mongoose.connection;
+  db.on("error", console.error.bind(console, "connection error:"));
+  db.once("open", () => {
+    console.log("Connected to MongoDB");
+  });
+  const messageSchema = new mongoose.Schema({
+    sender: String,
+    text: String,
+    timestamp: { type: Date, default: Date.now },
+  });
+  
+  const topicSchema = new mongoose.Schema({
+    name: String,
+    createdBy: String,
+    messages: [messageSchema],
+  });
+  
+  const Topic = mongoose.model("Topic", topicSchema);
+  
+  // Routes
+  
+  // Fetch topics created by the current user
+  app.get("/api/topics/:userId", async (req, res) => {
+    const { userId } = req.params;
+    try {
+      const topics = await Topic.find({ createdBy: userId });
+      res.json(topics);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Create a new topic
+  app.post("/api/topics", async (req, res) => {
+    const { name, createdBy } = req.body;
+    try {
+      const newTopic = new Topic({ name, createdBy, messages: [] });
+      await newTopic.save();
+      res.status(201).json(newTopic);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Add a message to a topic
+  app.post("/api/topics/:id/messages", async (req, res) => {
+    const { id } = req.params;
+    const { sender, text } = req.body;
+    try {
+      const topic = await Topic.findById(id);
+      if (topic) {
+        topic.messages.push({ sender, text });
+        await topic.save();
+        res.status(201).json(topic);
+      } else {
+        res.status(404).json({ error: "Topic not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // End a discussion
+  app.delete("/api/topics/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+      const topic = await Topic.findByIdAndDelete(id);
+      if (topic) {
+        res.status(200).json({ message: "Discussion ended" });
+      } else {
+        res.status(404).json({ error: "Topic not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 // Ensure upload directory exists
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
