@@ -97,22 +97,27 @@ def detect_anomalies_and_fake_data(df):
     scaled_data = scaler.fit_transform(df[numeric_columns])
 
     # Apply Isolation Forest for malicious detection (Anomaly Detection)
-    isolation_forest = IsolationForest(contamination=0.05)
+    isolation_forest = IsolationForest(contamination=0.1)
     isolation_forest.fit(scaled_data)
     predictions_if = isolation_forest.predict(scaled_data)
+
+    # Get the indices of the malicious data (anomalies)
+    malicious_indices = np.where(predictions_if == -1)[0]  # -1 indicates anomaly (malicious data)
+
+    # If 10% or more of the data is malicious, set malicious data to False
+    if len(malicious_indices) >= 0.01 * len(df):
+        return [], False  # No malicious data if 10% or more are flagged
 
     # Apply KNN for fake dataset detection (Outlier detection)
     clf_knn = KNN()
     clf_knn.fit(scaled_data)
     predictions_knn = clf_knn.predict(scaled_data)
 
-    # Check if there are any outliers or anomalies
-    malicious_found = np.any(predictions_if == -1)  # True if any anomaly is detected
-
     # Fake dataset detection (checking for duplicates)
     duplicates = df.duplicated().any()  # True if any duplicate is found
 
-    return malicious_found, duplicates
+    # Return malicious data indices and fake data detection result
+    return malicious_indices.tolist(), not duplicates  # True if no duplicate is found
 
 # Evaluate quality score for the uploaded dataset file
 def evaluate_quality_score(file_path):
@@ -127,17 +132,18 @@ def evaluate_quality_score(file_path):
         return {'status': 'error', 'message': 'Model not found.'}
 
     # Step 3: Detect anomalies (malicious) and fake data
-    malicious_found, fake_data_found = detect_anomalies_and_fake_data(df)
+    malicious_indices, fake_data_found = detect_anomalies_and_fake_data(df)
 
     # Step 4: Predict the quality score
     quality_score = predict_quality_score(model, df)
 
-    # Combine results
+    # Combine results and add malicious data indices
     result = {
         'status': 'success',
         'quality_score': round(float(quality_score), 2),
-        'malicious_data_found': bool(malicious_found),  # Convert to standard Python bool
-        'fake_data_found': bool(fake_data_found)        # Convert to standard Python bool
+        'malicious_data_found': bool(len(malicious_indices) > 0),  # True if anomalies are found
+        'malicious_data_indices': malicious_indices,  # List of indices where anomalies are found
+        'fake_data_found': bool(fake_data_found)  # True if any duplicate is found
     }
 
     return result
