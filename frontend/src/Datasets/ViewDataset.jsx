@@ -6,6 +6,18 @@ import DataContext from "../Context/DataContext";
 import { FaEthereum } from "react-icons/fa";
 import { IoMdStar } from "react-icons/io";
 
+// Helper function to convert Unix timestamp to IST (Indian Standard Time)
+const convertToIST = (timestamp) => {
+  console.log("Original Timestamp:", timestamp); // Debug the original timestamp
+
+  // Ensure timestamp is in seconds, multiply by 1000 if in milliseconds
+  const date = new Date(timestamp * 1000); // Convert to milliseconds if in seconds
+  const istOffset = 5.5 * 60; // IST is UTC + 5 hours 30 minutes
+  const istDate = new Date(date.getTime() + istOffset * 60000); // Apply IST offset
+
+  return istDate;
+};
+
 const ViewDataset = () => {
   const { datasets } = useContext(DataContext);
   const { id } = useParams();
@@ -27,6 +39,12 @@ const ViewDataset = () => {
       return "bg-red-500"; // Low quality
     }
   };
+
+  // Convert timestamp to IST
+  const timestampInIST = convertToIST(dataset.timestamp);
+  const formattedTimestamp = timestampInIST.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+  });
 
   return (
     <div className="bg-gray-50 p-8 basis-full">
@@ -91,8 +109,7 @@ const ViewDataset = () => {
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-lg">
-                  <strong>Uploaded on:</strong>{" "}
-                  {new Date(dataset.time).toLocaleDateString()}
+                  <strong>Uploaded on:</strong> {formattedTimestamp}
                 </p>
                 <button className="bg-black text-white px-3 py-1 mt-4 pb-2 text-2xl rounded-full">
                   Buy

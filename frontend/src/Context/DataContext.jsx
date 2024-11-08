@@ -1,161 +1,99 @@
 import { createContext, useState, useEffect } from "react";
+import Web3 from "web3";
+import DatasetStorageABI from "./DatasetStorageABI";
+
+const web3 = new Web3(window.ethereum); // Connect to Ethereum using MetaMask
+const contractAddress = "0xb352aa5ea65e135a1152268794610b23c81dac2b"; // Replace with your contract's address
 
 const DataContext = createContext({});
 
 export const DataProvider = ({ children }) => {
   const [filter, setFilter] = useState(0);
   const [searchVal, setSearchVal] = useState("");
+  const [datasets, setDatasets] = useState([]);
+  const [filteredDatasets, setFilteredDatasets] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [datasets, setDatasets] = useState([
-    {
-      id: "1",
-      name: "Global Health Data",
-      owner: "DataCorp",
-      time: "2024-11-06T15:46:00.000Z",
-      quality: 92,
-      rating: 4.9,
-      price: 99.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "This dataset contains a comprehensive collection of global health metrics, including disease prevalence, vaccination rates, and healthcare infrastructure across different countries.",
-    },
-    {
-      id: "2",
-      name: "COVID-19 Vaccine Efficacy",
-      owner: "BioTech Institute",
-      time: "2023-11-05T16:00:00.000Z",
-      quality: 85,
-      rating: 4.6,
-      price: 149.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "This dataset provides insights into the efficacy of COVID-19 vaccines based on clinical trials and real-world data, including age, gender, and regional variations.",
-    },
-    {
-      id: "3",
-      name: "Stock Market Predictions",
-      owner: "FinanceData",
-      time: "2024-11-07T10:00:00.000Z",
-      quality: 90,
-      rating: 4.3,
-      price: 199.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "A comprehensive collection of data aimed at predicting stock market trends, including historical data, market indicators, and financial metrics.",
-    },
-    {
-      id: "4",
-      name: "Climate Change Effects",
-      owner: "EcoData",
-      time: "2024-11-04T16:20:00.000Z",
-      quality: 80,
-      rating: 4.0,
-      price: 249.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "This dataset offers valuable insights into the effects of climate change, including temperature trends, sea level rise, and ecological impacts across different regions.",
-    },
-    {
-      id: "5",
-      name: "Sports Analytics Dataset",
-      owner: "SportSci",
-      time: "2024-11-07T12:00:00.000Z",
-      quality: 95,
-      rating: 4.7,
-      price: 799.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "A dataset containing detailed statistics on various sports, including player performance, team metrics, and match outcomes across different leagues.",
-    },
-    {
-      id: "6",
-      name: "Financial Crime Trends",
-      owner: "SafeData",
-      time: "2024-11-05T16:40:00.000Z",
-      quality: 88,
-      rating: 4.4,
-      price: 49.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "This dataset includes trends and patterns in financial crimes such as fraud, money laundering, and embezzlement, helping organizations and governments to predict and mitigate risks.",
-    },
-    {
-      id: "7",
-      name: "E-commerce Behavior Data",
-      owner: "MarketTrends",
-      time: "2024-11-05T16:50:00.000Z",
-      quality: 90,
-      rating: 4.8,
-      price: 129.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "A dataset offering detailed insights into online shopping behavior, including customer demographics, purchase patterns, and preferences across various e-commerce platforms.",
-    },
-    {
-      id: "8",
-      name: "Energy Consumption Data",
-      owner: "EnergyTech",
-      time: "2024-11-06T18:00:00.000Z",
-      quality: 85,
-      rating: 4.2,
-      price: 399.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "This dataset includes data on energy consumption patterns in different industries, energy-saving practices, and their environmental impact, useful for policy-making and research.",
-    },
-    {
-      id: "9",
-      name: "Public Health Policy Data",
-      owner: "HealthStats",
-      time: "2024-11-03T17:10:00.000Z",
-      quality: 78,
-      rating: 4.5,
-      price: 499.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "This dataset includes public health policies, including vaccination strategies, healthcare accessibility, and the effectiveness of public health campaigns in various regions.",
-    },
-    {
-      id: "10",
-      name: "Machine Learning Models Dataset",
-      owner: "AI Labs",
-      time: "2024-11-02T17:20:00.000Z",
-      quality: 92,
-      rating: 4.9,
-      price: 1099.99,
-      coverImg:
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgAB/1Ck+UAAAAAASUVORK5CYII=",
-      description:
-        "A comprehensive collection of datasets for training machine learning models, including labeled data for classification, regression, and clustering tasks across different industries.",
-    },
-  ]);
+  // Helper function to convert timestamp to IST (Indian Standard Time)
+  const convertToIST = (timestamp) => {
+    console.log("Original Timestamp:", timestamp); // Debugging line to check
 
-  const [filteredDatasets, setFilteredDatasets] = useState(datasets);
+    // Convert timestamp to a number if it's a string
+    const timestampNumber = parseInt(timestamp, 10); // Convert the string to a number
 
+    if (isNaN(timestampNumber)) {
+      console.error("Invalid timestamp:", timestamp);
+      return new Date(); // Return the current date if timestamp is invalid
+    }
+
+    const date = new Date(timestampNumber * 1000); // Convert to milliseconds if in seconds
+    const istOffset = 5.5 * 60; // IST is UTC + 5 hours 30 minutes
+    const istDate = new Date(date.getTime() + istOffset * 60000); // Apply IST offset
+
+    return istDate;
+  };
+
+  // Fetch datasets from the smart contract when the component mounts
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const contract = new web3.eth.Contract(
+          DatasetStorageABI,
+          contractAddress
+        );
+        const datasetCount = await contract.methods.getDatasetCount().call();
+        const loadedDatasets = [];
+
+        for (let i = 1; i <= datasetCount; i++) {
+          const dataset = await contract.methods.getDataset(i).call();
+
+          // Convert the timestamp to IST before storing it in the dataset
+          const timestampInIST = convertToIST(dataset.timestamp);
+
+          loadedDatasets.push({
+            id: dataset.id.toString(), // Convert BigNumber to string
+            name: dataset.name,
+            owner: dataset.owner,
+            timestamp: timestampInIST.toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+            }), // Format timestamp in IST
+            quality: dataset.quality.toString(),
+            rating: parseFloat(dataset.rating.toString()), // Make sure rating is a number
+            price: parseFloat(dataset.price.toString()), // Make sure price is a number
+            coverImg: dataset.coverImg,
+            description: dataset.description,
+            cidkey: dataset.cidkey, // Include cidkey
+          });
+        }
+        setDatasets(loadedDatasets);
+      } catch (error) {
+        console.error("Error fetching data from the blockchain:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Apply filter and search logic
   useEffect(() => {
     const applyFilter = () => {
-      let result = datasets;
+      let result = [...datasets];
 
       // Apply filter conditions
       if (filter === 1) {
         const twoDaysAgo = new Date();
         twoDaysAgo.setHours(twoDaysAgo.getHours() - 48);
         result = result.filter(
-          (dataset) => new Date(dataset.time) >= twoDaysAgo
+          (dataset) => new Date(dataset.timestamp) >= twoDaysAgo
         );
-      } else if (filter === 2) {
-        result = [...result].sort((a, b) => b.quality - a.quality);
+      }
+
+      // Apply sorting conditions
+      if (filter === 2) {
+        result = result.sort((a, b) => b.rating - a.rating); // Sort by rating
       } else if (filter === 3) {
-        result = [...result].sort((a, b) => b.rating - a.rating);
+        result = result.sort((a, b) => b.price - a.price); // Sort by price
       }
 
       // Apply search filter
@@ -184,6 +122,7 @@ export const DataProvider = ({ children }) => {
         handleFilter,
         datasets: filteredDatasets,
         setSearchVal,
+        loading,
       }}
     >
       {children}
