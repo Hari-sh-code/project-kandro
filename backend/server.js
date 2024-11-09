@@ -32,50 +32,45 @@ const upload = multer({
 
 // Data Quality Check endpoint (calls Python script for analysis)
 app.post('/api/data-quality-check', upload.single('file'), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        const filePath = path.join(uploadDir, req.file.filename);
-
-        // Spawn Python process to calculate quality
-        const pythonProcess = spawn(process.env.PYTHON_PATH || 'python', ['calculate_quality.py', filePath]);
-
-        let result = '';
-        pythonProcess.stdout.on('data', (data) => {
-            result += data.toString();
-        });
-
-        pythonProcess.on('close', (code) => {
-            console.log('Python script exited with code:', code); // Log the exit code
-            if (code === 0) {
-                try {
-                    const response = JSON.parse(result); // Parse the Python script output (JSON)
-                    if (response.status === 'success') {
-                        res.json(response); // Send back the quality score result
-                    } else {
-                        res.status(500).json({ error: 'Error from Python script', message: response.message });
-                    }
-                    fs.unlinkSync(filePath); // Cleanup the uploaded file after processing
-                } catch (err) {
-                    console.error('Error parsing JSON from Python:', err); // Log error parsing
-                    res.status(500).json({ error: 'Error parsing JSON from Python', details: err.message });
-                }
-            } else {
-                console.error('Python script failed with code:', code); // Log the failure code
-                res.status(500).json({ error: 'Error calculating data quality', code });
-            }
-        });
-
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`Python error: ${data}`); // Log any Python error messages
-            res.status(500).json({ error: 'Error in Python script', details: data.toString() });
-        });
-    } catch (error) {
-        console.error('Error processing file:', error); // Log the general error
-        res.status(500).json({ error: 'Error processing file', details: error.message });
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    const filePath = path.join(uploadDir, req.file.filename);
+
+    // Spawn Python process to calculate quality
+    const pythonProcess = spawn(process.env.PYTHON_PATH || 'python', ['calculate_quality.py', filePath]);
+
+    let result = '';
+    pythonProcess.stdout.on('data', (data) => {
+        result += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+        console.log('Python script exited with code:', code);
+        if (code === 0) {
+            try {
+                const response = JSON.parse(result);
+                if (response.status === 'success') {
+                    res.json(response);
+                } else {
+                    res.status(500).json({ error: 'Error from Python script', message: response.message });
+                }
+                fs.unlinkSync(filePath); // Cleanup the uploaded file after processing
+            } catch (err) {
+                console.error('Error parsing JSON from Python:', err);
+                res.status(500).json({ error: 'Error parsing JSON from Python', details: err.message });
+            }
+        } else {
+            console.error('Python script failed with code:', code);
+            res.status(500).json({ error: 'Error calculating data quality', code });
+        }
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+        console.error(`Python error: ${data}`);
+        res.status(500).json({ error: 'Error in Python script', details: data.toString() });
+    });
 });
 
 // Endpoint to upload file to Pinata (if needed)
@@ -93,8 +88,8 @@ app.post('/api/upload-to-pinata', upload.single('file'), (req, res) => {
     // Headers for Pinata request (use environment variables for API keys)
     const headers = {
         ...form.getHeaders(),
-        pinata_api_key: process.env.PINATA_API_KEY,  // Use environment variables
-        pinata_secret_api_key: process.env.PINATA_SECRET_API_KEY, // Use environment variables
+        pinata_api_key: process.env.PINATA_API_KEY,
+        pinata_secret_api_key: process.env.PINATA_SECRET_API_KEY,
     };
 
     // Make the API request to Pinata
@@ -103,11 +98,10 @@ app.post('/api/upload-to-pinata', upload.single('file'), (req, res) => {
             headers: headers,
         })
         .then((response) => {
-            // Send back the IPFS CID from Pinata
             res.status(200).json({
                 success: true,
                 message: 'File uploaded successfully',
-                cid: response.data.IpfsHash,  // Pinata's response contains the CID (hash)
+                cid: response.data.IpfsHash,
             });
         })
         .catch((error) => {
