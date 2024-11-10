@@ -108,19 +108,6 @@ export function UploadData() {
     formData.append("cidcode", cidcode); // Include the CID code
     formData.append("ethPrice", ethPrice);
 
-    try {
-      const response = await axios.post(
-        "http://localhost:9000/api/upload-dataset",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      console.log("Data uploaded successfully:", response.data);
-    } catch (error) {
-      console.error("Error uploading data:", error);
-    }
-
     if (!userAddress) {
       alert("User address is not available. Please check MetaMask connection.");
       return;
