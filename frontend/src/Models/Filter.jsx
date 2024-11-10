@@ -34,7 +34,7 @@ const Filter = () => {
             : "bg-white text-black"
         } filter`}
       >
-        High Quality
+        High Performance
       </div>
       {/* <div
         onClick={() => handleFilter(3)}

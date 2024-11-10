@@ -123,7 +123,7 @@ const ViewDataset = () => {
 
             {/* Quality Score and Scale */}
             <div className="mt-4">
-              <h4 className="text-xl font-semibold">Quality Score</h4>
+              <h4 className="text-xl font-semibold">Sanity Score</h4>
               <div className="flex items-center mt-2">
                 <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div

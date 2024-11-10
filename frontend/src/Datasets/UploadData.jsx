@@ -199,7 +199,7 @@ export function UploadData() {
                 disabled={!file}
                 className="mt-4 bg-slate-800 text-white px-4 py-2 rounded-md shadow hover:bg-slate-600 flex items-center gap-2 transition cursor-pointer"
               >
-                <FaCloudUploadAlt /> Check Quality
+                <FaCloudUploadAlt /> Check Sanity
               </button>
             )}
           </div>
@@ -207,7 +207,7 @@ export function UploadData() {
           {qualityChecked && (
             <div className="bg-blue-50 p-4 rounded-lg shadow-inner mb-4">
               <div className="text-lg text-blue-700">
-                <strong>Data Quality Score:</strong> {dataQuality}
+                <strong>Data Sanity Score:</strong> {dataQuality}
               </div>
               {qualityWarning && (
                 <div className="flex items-center gap-2 mt-2">
