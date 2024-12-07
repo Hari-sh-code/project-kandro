@@ -47,10 +47,7 @@ const Home = () => {
               Who's on Kandro?
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              <div className="p-6 bg-white  hover:bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
-
-             
-
+              <div className="p-6 bg-white hover:bg-slate-100 rounded-lg shadow-md transition-transform duration-300 hover:scale-105">
                 <h3 className="text-xl font-medium mb-3">Learners</h3>
                 <p className="text-base">
                   Access courses, competitions, and forums to deepen your
