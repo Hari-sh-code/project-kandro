@@ -3,7 +3,7 @@ import Web3 from "web3";
 import DatasetStorageABI from "./DatasetStorageABI";
 
 const web3 = new Web3(window.ethereum); // Connect to Ethereum using MetaMask
-const contractAddress = "0xdb5d4666eb909f539f23ab752a53f85b7fd54d53"; // Replace with your contract's address
+const contractAddress = import.meta.env.VITE_contractAddress; // Replace with your contract's address
 
 const DataContext = createContext({});
 

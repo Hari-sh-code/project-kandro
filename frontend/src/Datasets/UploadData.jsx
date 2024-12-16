@@ -115,7 +115,7 @@ export function UploadData() {
 
     try {
       const web3 = new Web3(window.ethereum);
-      const contractAddress = "0xdb5d4666eb909f539f23ab752a53f85b7fd54d53";
+      const contractAddress = import.meta.env.VITE_contractAddress;
       const contract = new web3.eth.Contract(
         DatasetStorageABI,
         contractAddress

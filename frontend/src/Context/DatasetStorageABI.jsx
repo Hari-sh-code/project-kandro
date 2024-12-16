@@ -1,48 +1,5 @@
 const DatasetStorageABI = [
   {
-    inputs: [
-      {
-        internalType: "string",
-        name: "_name",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_owner",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_cidkey",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_quality",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_price",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_description",
-        type: "string",
-      },
-      {
-        internalType: "string",
-        name: "_useraddress",
-        type: "string",
-      },
-    ],
-    name: "addDataset",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     anonymous: false,
     inputs: [
       {
@@ -102,6 +59,49 @@ const DatasetStorageABI = [
     ],
     name: "DatasetAdded",
     type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "_name",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_owner",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_cidkey",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_quality",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_price",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_description",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_useraddress",
+        type: "string",
+      },
+    ],
+    name: "addDataset",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
     inputs: [],
