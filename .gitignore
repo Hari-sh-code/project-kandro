@@ -14,6 +14,7 @@ dist
 dist-ssr
 *.local
 /backend/.env
+/frontend/.env
 node_modules
 package-lock.json
 
@@ -27,3 +28,5 @@ package-lock.json
 *.njsproj
 *.sln
 *.sw?
+
+/backend/uploads
