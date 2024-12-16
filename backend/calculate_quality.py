@@ -1,6 +1,7 @@
 import argparse
 import pandas as pd
 import numpy as np
+import json
 
 # Define the required features for quality evaluation
 required_features = [
@@ -89,6 +90,11 @@ if __name__ == "__main__":
     # Calculate the mean of the quality metrics
     mean_quality_score = np.mean(list(metrics.values()))
 
-    # Output the mean quality score and the calculated quality metrics
-    print(f"Mean quality score: {mean_quality_score}")
-    print(f"Calculated quality metrics: {metrics}")
+    # Prepare the output in a simple format for visualization with status
+    output = {
+        "status": "success",
+        "mean_quality_score": mean_quality_score
+    }
+
+    # Print the output in JSON format
+    print(json.dumps(output, indent=4))

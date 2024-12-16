@@ -38,7 +38,7 @@ export function UploadData() {
           }
         );
         const qualityData = response.data;
-        setDataQuality(qualityData.quality_score);
+        setDataQuality(qualityData.mean_quality_score);
         setQualityChecked(true);
 
         // Check for malicious and fake data indicators
