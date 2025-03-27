@@ -1,7 +1,4 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: Node.js and Python CI
 
 on:
   push:
@@ -11,21 +8,49 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v4
+
+    # Setup Node.js
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
+
+    # Setup Python
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Ensure this file has pandas, xgboost, scikit-learn, etc.
+
+    # Train the Model
+    - name: Train Model
+      run: python train_model.py
+
+    # Calculate Dataset Quality using the Model
+    - name: Calculate Dataset Quality
+      run: python calculate_quality.py
+
+    # Upload the trained model as an artifact
+    - name: Save Trained Model
+      uses: actions/upload-artifact@v4
+      with:
+        name: dataset_quality_model
+        path: dataset_quality_model_xgb.pkl
